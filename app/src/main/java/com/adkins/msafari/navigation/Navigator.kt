@@ -9,8 +9,8 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
-import com.adkins.msafari.viewmodels.BookingViewModel
 import com.adkins.msafari.ui.theme.screens.*
+import com.adkins.msafari.viewmodels.BookingViewModel
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
@@ -63,15 +63,8 @@ fun MsafariNavGraph(
         composable(Screen.ClientHome.route) {
             ClientHomeScreen(
                 onStartBooking = { navController.navigate(Screen.Booking.route) },
-                onViewBookings = { navController.navigate(Screen.BookingHistory.route) },
-                onLogout = {
-                    navController.navigate(Screen.Login.route) {
-                        popUpTo(Screen.ClientHome.route) { inclusive = true }
-                    }
-                },
-                onNavigateToSettings = {
-                    navController.navigate(Screen.Settings.route)
-                }
+                onViewHistory = { navController.navigate(Screen.BookingHistory.route) },
+                onSettings = { navController.navigate(Screen.Settings.route) }
             )
         }
 
@@ -158,7 +151,7 @@ fun MsafariNavGraph(
                         }
                     },
                     onBookingFailure = { error ->
-                        // TODO: Show error snackbar or toast if needed
+                        // Handle booking failure if needed
                     },
                     onBack = { navController.popBackStack() }
                 )
@@ -183,10 +176,10 @@ fun MsafariNavGraph(
 
         // SETTINGS
         composable(Screen.Settings.route) {
-            SettingsScreen(onBack = { navController.popBackStack() })
+            ClientSettingsScreen(onBack = { navController.popBackStack() })
         }
 
-        // DRIVER PROFILE
+        // DRIVER PROFILE COMPLETION
         composable(Screen.DriverProfile.route) {
             DriverProfileCompletionScreen(
                 onSubmit = {

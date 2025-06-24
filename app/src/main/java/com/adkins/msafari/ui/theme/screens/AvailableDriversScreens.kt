@@ -11,16 +11,12 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.adkins.msafari.firestore.Driver
 import com.adkins.msafari.firestore.DriverManager
 import com.adkins.msafari.models.Traveler
-import com.adkins.msafari.ui.theme.Black
-import com.adkins.msafari.ui.theme.Green
-import com.adkins.msafari.ui.theme.White
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -50,22 +46,21 @@ fun AvailableDriversScreen(
     }
 
     Scaffold(
-        containerColor = Black,
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             TopAppBar(
-                title = { Text("Available Drivers", color = White) },
+                title = { Text("Available Drivers", color = MaterialTheme.colorScheme.onPrimary) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(
                             imageVector = Icons.Default.ArrowBack,
                             contentDescription = "Back",
-                            tint = Black
+                            tint = MaterialTheme.colorScheme.onPrimary
                         )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Green,
-                    titleContentColor = Black
+                    containerColor = MaterialTheme.colorScheme.primary
                 )
             )
         },
@@ -76,7 +71,10 @@ fun AvailableDriversScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(16.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Green, contentColor = Black)
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary
+                    )
                 ) {
                     Text("Continue with Selected Drivers")
                 }
@@ -91,7 +89,7 @@ fun AvailableDriversScreen(
         ) {
             if (isLoading) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator(color = Green)
+                    CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
                 }
             } else {
                 LazyColumn {
@@ -124,12 +122,12 @@ fun DriverCard(driver: Driver, isSelected: Boolean, onClick: () -> Unit) {
             .clickable { onClick() }
             .border(
                 width = if (isSelected) 2.dp else 0.dp,
-                color = if (isSelected) Green else Color.Transparent
+                color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.background
             ),
         elevation = CardDefaults.cardElevation(4.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Black,
-            contentColor = White
+            containerColor = MaterialTheme.colorScheme.surface,
+            contentColor = MaterialTheme.colorScheme.onSurface
         )
     ) {
         Row(modifier = Modifier.padding(16.dp)) {
@@ -142,9 +140,9 @@ fun DriverCard(driver: Driver, isSelected: Boolean, onClick: () -> Unit) {
             Spacer(modifier = Modifier.width(16.dp))
 
             Column {
-                Text(driver.name, fontWeight = FontWeight.Bold, color = White)
-                Text("Vehicle: ${driver.vehicleType}", color = White)
-                Text("Seats: ${driver.seater}", color = White)
+                Text(driver.name, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                Text("Vehicle: ${driver.vehicleType}", color = MaterialTheme.colorScheme.onSurface)
+                Text("Seats: ${driver.seater}", color = MaterialTheme.colorScheme.onSurface)
             }
         }
     }

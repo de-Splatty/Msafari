@@ -3,6 +3,8 @@ package com.adkins.msafari.ui.theme.screens
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -13,9 +15,6 @@ import com.adkins.msafari.firestore.BookingManager
 import com.adkins.msafari.firestore.Driver
 import com.adkins.msafari.models.BookingData
 import com.adkins.msafari.models.Traveler
-import com.adkins.msafari.ui.theme.Black
-import com.adkins.msafari.ui.theme.Green
-import com.adkins.msafari.ui.theme.White
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
 
@@ -31,52 +30,54 @@ fun BookingConfirmationScreen(
     onBack: () -> Unit
 ) {
     var isLoading by remember { mutableStateOf(false) }
+    val colorScheme = MaterialTheme.colorScheme
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Confirm Booking", color = White) },
+                title = { Text("Confirm Booking", color = colorScheme.onPrimary) },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Green,
-                    titleContentColor = Black
+                    containerColor = colorScheme.primary,
+                    titleContentColor = colorScheme.onPrimary
                 )
             )
         },
-        containerColor = Black
+        containerColor = colorScheme.background
     ) { innerPadding ->
         Column(
             modifier = Modifier
                 .padding(innerPadding)
                 .padding(24.dp)
-                .fillMaxSize(),
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text("You selected ${selectedDrivers.size} drivers", color = White)
+            Text("You selected ${selectedDrivers.size} drivers", color = colorScheme.onBackground)
 
             selectedDrivers.forEach { driver ->
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = Black)
+                    colors = CardDefaults.cardColors(containerColor = colorScheme.surface)
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
-                        Text("Name: ${driver.name}", color = White)
-                        Text("Vehicle: ${driver.vehicleType}", color = White)
-                        Text("Seats: ${driver.seater}", color = White)
+                        Text("Name: ${driver.name}", color = colorScheme.onSurface)
+                        Text("Vehicle: ${driver.vehicleType}", color = colorScheme.onSurface)
+                        Text("Seats: ${driver.seater}", color = colorScheme.onSurface)
                     }
                 }
             }
 
-            Divider(color = Green)
-            Text("Travel Date: ${bookingData.travelDate}", color = White)
-            Text("Return Date: ${bookingData.returnDate}", color = White)
-            Text("Travelers: ${travelers.size}", color = White)
-            Text("Children Present: ${if (bookingData.hasChildren) "Yes" else "No"}", color = White)
+            Divider(color = colorScheme.primary)
+            Text("Travel Date: ${bookingData.travelDate}", color = colorScheme.onBackground)
+            Text("Return Date: ${bookingData.returnDate}", color = colorScheme.onBackground)
+            Text("Travelers: ${travelers.size}", color = colorScheme.onBackground)
+            Text("Children Present: ${if (bookingData.hasChildren) "Yes" else "No"}", color = colorScheme.onBackground)
 
             Spacer(modifier = Modifier.height(24.dp))
 
             if (isLoading) {
-                CircularProgressIndicator(color = Green)
+                CircularProgressIndicator(color = colorScheme.primary)
             } else {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -84,7 +85,7 @@ fun BookingConfirmationScreen(
                 ) {
                     OutlinedButton(
                         onClick = onBack,
-                        colors = ButtonDefaults.outlinedButtonColors(contentColor = Green)
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = colorScheme.primary)
                     ) {
                         Text("Back")
                     }
@@ -129,7 +130,10 @@ fun BookingConfirmationScreen(
                                 onBookingFailure("User not logged in")
                             }
                         },
-                        colors = ButtonDefaults.buttonColors(containerColor = Green, contentColor = Black)
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = colorScheme.primary,
+                            contentColor = colorScheme.onPrimary
+                        )
                     ) {
                         Text("Confirm Booking")
                     }

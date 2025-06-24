@@ -12,9 +12,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.adkins.msafari.models.BookingData
-import com.adkins.msafari.ui.theme.Black
-import com.adkins.msafari.ui.theme.Green
-import com.adkins.msafari.ui.theme.White
 import java.time.LocalDate
 import java.util.*
 
@@ -71,17 +68,19 @@ fun BookingScreen(
         )
     }
 
+    val colorScheme = MaterialTheme.colorScheme
+
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("New Booking", color = White) },
+                title = { Text("New Booking", color = colorScheme.onPrimary) },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Green,
-                    titleContentColor = Black
+                    containerColor = colorScheme.primary,
+                    titleContentColor = colorScheme.onPrimary
                 )
             )
         },
-        containerColor = Black
+        containerColor = colorScheme.background
     ) { innerPadding ->
         Column(
             modifier = Modifier
@@ -90,27 +89,20 @@ fun BookingScreen(
                 .fillMaxSize(),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Vehicle Type Dropdown
             ExposedDropdownMenuBox(
                 expanded = expanded,
                 onExpandedChange = { expanded = !expanded }
             ) {
-                OutlinedTextField(
+                TextField(
                     value = selectedVehicle,
                     onValueChange = {},
                     readOnly = true,
-                    label = { Text("Vehicle Type", color = White) },
-                    modifier = Modifier
-                        .menuAnchor()
-                        .fillMaxWidth(),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedTextColor = White,
-                        unfocusedTextColor = White,
-                        focusedLabelColor = Green,
-                        unfocusedLabelColor = White,
-                        cursorColor = Green
-                    )
+                    label = { Text("Vehicle Type") },
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                    colors = ExposedDropdownMenuDefaults.textFieldColors(),
+                    modifier = Modifier.menuAnchor().fillMaxWidth()
                 )
+
                 ExposedDropdownMenu(
                     expanded = expanded,
                     onDismissRequest = { expanded = false }
@@ -127,117 +119,87 @@ fun BookingScreen(
                 }
             }
 
-            // Number of Adults
             OutlinedTextField(
                 value = numberOfTravelers,
                 onValueChange = { numberOfTravelers = it },
-                label = { Text("Number of Adults", color = White) },
-                modifier = Modifier.fillMaxWidth(),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedTextColor = White,
-                    unfocusedTextColor = White,
-                    focusedLabelColor = Green,
-                    unfocusedLabelColor = White,
-                    cursorColor = Green
-                )
+                label = { Text("Number of Travelers") },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth()
             )
 
-            // Has Children Switch
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("Are there children?", color = White)
-                Spacer(modifier = Modifier.width(16.dp))
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Has Children?", color = colorScheme.onBackground)
                 Switch(
                     checked = hasChildren,
-                    onCheckedChange = {
-                        hasChildren = it
-                        if (!it) numberOfChildren = ""
-                    },
+                    onCheckedChange = { hasChildren = it },
                     colors = SwitchDefaults.colors(
-                        checkedTrackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f),
-                        checkedThumbColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.9f),
-                        uncheckedThumbColor = White,
-                        uncheckedTrackColor = White.copy(alpha = 0.3f)
+                        checkedThumbColor = colorScheme.primary,
+                        uncheckedThumbColor = colorScheme.onBackground
                     )
                 )
             }
 
-            // Number of Children
             if (hasChildren) {
                 OutlinedTextField(
                     value = numberOfChildren,
                     onValueChange = { numberOfChildren = it },
-                    label = { Text("How many children?", color = White) },
-                    keyboardOptions = androidx.compose.foundation.text.KeyboardOptions.Default.copy(
-                        keyboardType = androidx.compose.ui.text.input.KeyboardType.Number
-                    ),
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedTextColor = White,
-                        unfocusedTextColor = White,
-                        focusedLabelColor = Green,
-                        unfocusedLabelColor = White,
-                        cursorColor = Green
-                    )
+                    label = { Text("Number of Children") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
 
-            // Dates and Time
-            Button(
-                onClick = { travelDatePicker.show() },
-                modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(containerColor = Green, contentColor = Black)
-            ) {
-                Text("Travel Date: $travelDate")
+            Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                Button(onClick = { travelDatePicker.show() }) {
+                    Text("Pick Travel Date")
+                }
+                Text(text = travelDate, color = colorScheme.onBackground)
             }
 
-            Button(
-                onClick = { returnDatePicker.show() },
-                modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(containerColor = Green, contentColor = Black)
-            ) {
-                Text("Return Date: $returnDate")
+            Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                Button(onClick = { returnDatePicker.show() }) {
+                    Text("Pick Return Date")
+                }
+                Text(text = returnDate, color = colorScheme.onBackground)
             }
 
-            Button(
-                onClick = { timePicker.show() },
-                modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(containerColor = Green, contentColor = Black)
-            ) {
-                Text("Pickup Time: $pickupTime")
+            Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                Button(onClick = { timePicker.show() }) {
+                    Text("Pick Pickup Time")
+                }
+                Text(text = pickupTime, color = colorScheme.onBackground)
             }
 
-            if (showError) {
-                Text(
-                    "Please fill all fields correctly",
-                    color = MaterialTheme.colorScheme.error
-                )
-            }
+            Spacer(modifier = Modifier.height(24.dp))
 
             Button(
                 onClick = {
-                    val adults = numberOfTravelers.toIntOrNull()
-                    val kids = if (hasChildren) numberOfChildren.toIntOrNull() ?: 0 else 0
-                    if (adults == null || adults <= 0 || (hasChildren && numberOfChildren.isBlank()) || travelDate.isBlank() || returnDate.isBlank()) {
-                        showError = true
+                    val bookingData = BookingData(
+                        travelDate = travelDate,
+                        returnDate = returnDate,
+                        vehicleType = selectedVehicle,
+                        hasChildren = hasChildren,
+                        numberOfTravelers = numberOfTravelers.toIntOrNull() ?: 0,
+                        numberOfChildren = numberOfChildren.toIntOrNull() ?: 0,
+                        travelers = emptyList()
+                    )
+                    if (bookingData.numberOfTravelers > 0) {
+                        onContinue(bookingData)
                     } else {
-                        showError = false
-                        onContinue(
-                            BookingData(
-                                vehicleType = selectedVehicle,
-                                numberOfTravelers = adults + kids,
-                                hasChildren = hasChildren,
-                                numberOfChildren = kids,
-                                travelDate = travelDate,
-                                returnDate = returnDate,
-                                travelers = emptyList() // travelers will be added later
-                            )
-                        )
+                        showError = true
                     }
                 },
-                modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(containerColor = Green, contentColor = Black)
+                modifier = Modifier.fillMaxWidth()
             ) {
                 Text("Continue")
+            }
+
+            if (showError) {
+                Text("Please fill all required fields properly.", color = colorScheme.error)
             }
         }
     }
