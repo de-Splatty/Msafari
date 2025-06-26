@@ -1,5 +1,6 @@
 package com.adkins.msafari.ui.theme.screens
 
+import android.content.Context
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -11,12 +12,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.adkins.msafari.R
+import com.adkins.msafari.auth.AccountManager
 import com.adkins.msafari.auth.AuthManager
 import com.adkins.msafari.firestore.DriverManager
+import com.adkins.msafari.models.User
 import com.adkins.msafari.ui.theme.Black
 import com.adkins.msafari.ui.theme.Green
 import com.adkins.msafari.ui.theme.White
@@ -29,6 +33,7 @@ fun LoginScreen(
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var error by remember { mutableStateOf<String?>(null) }
+    val context = LocalContext.current
 
     Box(
         modifier = Modifier
@@ -92,9 +97,25 @@ fun LoginScreen(
                     AuthManager.signIn(
                         email,
                         password,
+                        context, // ✅ Pass context here
                         onSuccess = {
                             AuthManager.fetchUserRole(
                                 onRoleFetched = { role ->
+                                    val uid = AuthManager.getCurrentUserId()
+                                    if (uid != null) {
+                                        AuthManager.fetchUserName(
+                                            onResult = { name ->
+                                                val user = User(
+                                                    uid = uid,
+                                                    name = name,
+                                                    email = email
+                                                )
+                                                AccountManager.saveAccount(user) // context already initialized in App startup
+                                            },
+                                            onError = { /* Fallback: skip saving */ }
+                                        )
+                                    }
+
                                     if (role.lowercase() == "driver") {
                                         val currentDriverId = AuthManager.getCurrentUserId()
                                         if (currentDriverId != null) {

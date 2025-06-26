@@ -41,16 +41,19 @@ android {
 }
 
 dependencies {
+    implementation ("com.google.android.gms:play-services-location:21.0.1")
+    implementation (libs.accompanist.pager.v0320)
+    implementation (libs.accompanist.pager.indicators.v0320)
+    implementation("com.google.code.gson:gson:2.11.0")
     implementation(libs.firebase.storage.ktx)
+    implementation(libs.firebase.crashlytics.buildtools)
     val nav_version = "2.9.0"
-    implementation (libs.accompanist.pager)
-    implementation (libs.accompanist.pager.indicators)
     implementation("androidx.navigation:navigation-compose:$nav_version")
     implementation("io.coil-kt:coil-compose:2.4.0")
-    implementation (libs.osmdroid.android)
-    implementation (libs.androidx.material.icons.extended)
-    implementation ("androidx.datastore:datastore-preferences:1.1.7")
-    implementation (libs.play.services.location)
+    implementation(libs.osmdroid.android)
+    implementation(libs.androidx.material.icons.extended)
+    implementation("androidx.datastore:datastore-preferences:1.1.7")
+    implementation(libs.play.services.location)
     implementation(libs.firebase.firestore)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)

@@ -36,6 +36,8 @@ object BookingManager {
             totalPrice = totalCost.toDouble(),
             status = "pending",
             approvedBy = null,
+            pickupLocation = bookingData.pickupLocation,
+            destinationLocation = bookingData.destinationLocation,
             createdAt = Timestamp.now()
         )
 
@@ -162,6 +164,34 @@ object BookingManager {
             }
             .addOnFailureListener { e ->
                 onFailure(e.message ?: "Failed to fetch bookings.")
+            }
+    }
+
+    fun fetchLatestBookingForClient(
+        clientId: String,
+        onSuccess: (Booking) -> Unit,
+        onFailure: (String) -> Unit
+    ) {
+        db.collection("bookings")
+            .whereEqualTo("clientId", clientId)
+            .orderBy("createdAt", com.google.firebase.firestore.Query.Direction.DESCENDING)
+            .limit(1)
+            .get()
+            .addOnSuccessListener { result ->
+                val doc = result.documents.firstOrNull()
+                if (doc != null) {
+                    val booking = doc.toObject(Booking::class.java)
+                    if (booking != null) {
+                        onSuccess(booking)
+                    } else {
+                        onFailure("Failed to parse booking.")
+                    }
+                } else {
+                    onFailure("No bookings found.")
+                }
+            }
+            .addOnFailureListener { e ->
+                onFailure(e.message ?: "Error fetching latest booking.")
             }
     }
 }

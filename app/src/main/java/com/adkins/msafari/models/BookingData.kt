@@ -7,5 +7,7 @@ data class BookingData(
     val hasChildren: Boolean,
     val numberOfTravelers: Int,
     val numberOfChildren: Int,
+    val pickupLocation: String = "",
+    val destinationLocation: String = "",
     val travelers: List<Traveler> = emptyList()
 )

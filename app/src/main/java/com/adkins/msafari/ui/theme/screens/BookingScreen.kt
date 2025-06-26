@@ -5,10 +5,12 @@ import android.app.TimePickerDialog
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.Colors
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.adkins.msafari.models.BookingData
@@ -29,6 +31,8 @@ fun BookingScreen(
     var numberOfTravelers by remember { mutableStateOf("") }
     var hasChildren by remember { mutableStateOf(false) }
     var numberOfChildren by remember { mutableStateOf("") }
+    var pickupLocation by remember { mutableStateOf("") }
+    var destinationLocation by remember { mutableStateOf("") }
 
     var travelDate by remember { mutableStateOf(LocalDate.now().toString()) }
     var returnDate by remember { mutableStateOf(LocalDate.now().plusDays(1).toString()) }
@@ -153,6 +157,22 @@ fun BookingScreen(
                 )
             }
 
+            OutlinedTextField(
+                value = pickupLocation,
+                onValueChange = { pickupLocation = it },
+                label = { Text("Pickup Location") },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            OutlinedTextField(
+                value = destinationLocation,
+                onValueChange = { destinationLocation = it },
+                label = { Text("Destination Location") },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth()
+            )
+
             Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                 Button(onClick = { travelDatePicker.show() }) {
                     Text("Pick Travel Date")
@@ -185,17 +205,26 @@ fun BookingScreen(
                         hasChildren = hasChildren,
                         numberOfTravelers = numberOfTravelers.toIntOrNull() ?: 0,
                         numberOfChildren = numberOfChildren.toIntOrNull() ?: 0,
+                        pickupLocation = pickupLocation,
+                        destinationLocation = destinationLocation,
                         travelers = emptyList()
                     )
-                    if (bookingData.numberOfTravelers > 0) {
+                    if (bookingData.numberOfTravelers > 0 &&
+                        pickupLocation.isNotBlank() &&
+                        destinationLocation.isNotBlank()
+                    ) {
                         onContinue(bookingData)
                     } else {
                         showError = true
                     }
                 },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = colorScheme.primary,
+                    contentColor = colorScheme.onPrimary
+                )
             ) {
-                Text("Continue")
+                Text("Continue", color = Color.White)
             }
 
             if (showError) {

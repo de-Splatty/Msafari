@@ -3,26 +3,26 @@ package com.adkins.msafari.ui.theme.screens
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.adkins.msafari.auth.AuthManager
+import com.adkins.msafari.components.ClientScaffoldWrapper
 import com.adkins.msafari.firestore.BookingManager
-import com.adkins.msafari.models.BookingData
+import com.adkins.msafari.models.Booking
+import com.adkins.msafari.navigation.Screen
+import com.google.firebase.Timestamp
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BookingHistoryScreen(
-    onBack: () -> Unit = {}
+    currentRoute: String,
+    onNavigate: (String) -> Unit
 ) {
-    var bookings by remember { mutableStateOf<List<BookingData>>(emptyList()) }
+    var bookings by remember { mutableStateOf<List<Booking>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
     var error by remember { mutableStateOf<String?>(null) }
-    val colorScheme = MaterialTheme.colorScheme
 
     LaunchedEffect(Unit) {
         val userId = AuthManager.getCurrentUserId()
@@ -32,14 +32,19 @@ fun BookingHistoryScreen(
                 onSuccess = { bookingList ->
                     bookings = bookingList.mapNotNull { raw ->
                         try {
-                            BookingData(
-                                travelDate = raw["travelDate"] as? String ?: return@mapNotNull null,
-                                returnDate = raw["returnDate"] as? String ?: return@mapNotNull null,
-                                vehicleType = raw["vehicleType"] as? String ?: return@mapNotNull null,
-                                hasChildren = raw["hasChildren"] as? Boolean ?: false,
-                                numberOfTravelers = (raw["numberOfTravelers"] as? Long)?.toInt() ?: 0,
-                                numberOfChildren = (raw["numberOfChildren"] as? Long)?.toInt() ?: 0,
-                                travelers = emptyList()
+                            Booking(
+                                clientId = raw["clientId"] as? String ?: return@mapNotNull null,
+                                driverId = raw["driverId"] as? String ?: "",
+                                vehicleType = raw["vehicleType"] as? String ?: "",
+                                travelDate = raw["travelDate"] as? String ?: "",
+                                returnDate = raw["returnDate"] as? String ?: "",
+                                travelers = emptyList(),
+                                totalPrice = (raw["totalPrice"] as? Number)?.toDouble() ?: 0.0,
+                                status = raw["status"] as? String ?: "pending",
+                                approvedBy = raw["approvedBy"] as? String,
+                                createdAt = raw["createdAt"] as? Timestamp ?: Timestamp.now(),
+                                pickupLocation = raw["pickupLocation"] as? String ?: "N/A",
+                                destinationLocation = raw["destinationLocation"] as? String ?: "N/A"
                             )
                         } catch (e: Exception) {
                             null
@@ -58,57 +63,59 @@ fun BookingHistoryScreen(
         }
     }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Booking History", color = colorScheme.onPrimary) },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = colorScheme.onPrimary)
+    ClientScaffoldWrapper(
+        title = "Booking History",
+        currentRoute = currentRoute,
+        onNavigate = onNavigate,
+        showTripStatus = true,
+        showProfile = true,
+        content = { innerPadding ->
+            Column(
+                modifier = Modifier
+                    .padding(innerPadding)
+                    .padding(16.dp)
+                    .fillMaxSize()
+            ) {
+                when {
+                    isLoading -> {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+                        }
                     }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = colorScheme.primary)
-            )
-        },
-        containerColor = colorScheme.background
-    ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .padding(innerPadding)
-                .padding(16.dp)
-                .fillMaxSize()
-        ) {
-            when {
-                isLoading -> {
-                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator(color = colorScheme.primary)
+
+                    error != null -> {
+                        Text("Error: $error", color = MaterialTheme.colorScheme.error)
                     }
-                }
-                error != null -> {
-                    Text("Error: $error", color = colorScheme.error)
-                }
-                bookings.isEmpty() -> {
-                    Text("No bookings found.", color = colorScheme.onBackground)
-                }
-                else -> {
-                    LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                        items(bookings) { booking ->
-                            Card(
-                                modifier = Modifier.fillMaxWidth(),
-                                colors = CardDefaults.cardColors(containerColor = colorScheme.surface),
-                                elevation = CardDefaults.cardElevation(4.dp)
-                            ) {
-                                Column(modifier = Modifier.padding(16.dp)) {
-                                    Text("Vehicle: ${booking.vehicleType}", color = colorScheme.onSurface)
-                                    Text("Travelers: ${booking.numberOfTravelers}", color = colorScheme.onSurface)
-                                    Text("Travel Date: ${booking.travelDate}", color = colorScheme.onSurface)
-                                    Text("Return Date: ${booking.returnDate}", color = colorScheme.onSurface)
-                                    Text("Children: ${if (booking.hasChildren) booking.numberOfChildren else 0}", color = colorScheme.onSurface)
-                                    Text(
-                                        "Status: Confirmed",
-                                        color = colorScheme.primary,
-                                        style = MaterialTheme.typography.labelLarge
-                                    )
+
+                    bookings.isEmpty() -> {
+                        Text("No bookings found.", color = MaterialTheme.colorScheme.onBackground)
+                    }
+
+                    else -> {
+                        LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                            items(bookings) { booking ->
+                                Card(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                                    elevation = CardDefaults.cardElevation(4.dp)
+                                ) {
+                                    Column(modifier = Modifier.padding(16.dp)) {
+                                        Text("Vehicle: ${booking.vehicleType}")
+                                        Text("Travelers: ${booking.travelers.size}")
+                                        Text("Travel Date: ${booking.travelDate}")
+                                        Text("Return Date: ${booking.returnDate}")
+                                        Text("Pickup: ${booking.pickupLocation}")
+                                        Text("Destination: ${booking.destinationLocation}")
+                                        Text("Total: KES ${booking.totalPrice.toInt()}")
+                                        Text(
+                                            "Status: ${booking.status.replaceFirstChar { it.uppercase() }}",
+                                            color = if (booking.status == "approved") MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
+                                            style = MaterialTheme.typography.labelLarge
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -116,5 +123,5 @@ fun BookingHistoryScreen(
                 }
             }
         }
-    }
+    )
 }

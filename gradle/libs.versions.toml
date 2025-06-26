@@ -1,5 +1,7 @@
 [versions]
 accompanistPager = "0.28.0"
+accompanistPagerIndicators = "0.32.0"
+accompanistPagerVersion = "0.32.0"
 agp = "8.10.1"
 kotlin = "2.0.21"
 coreKtx = "1.16.0"
@@ -22,10 +24,13 @@ playServicesLocation = "21.3.0"
 playServicesLocationVersion = "21.0.1"
 playServicesMaps = "19.2.0"
 firebaseStorageKtx = "21.0.2"
+firebaseCrashlyticsBuildtools = "3.0.4"
 
 [libraries]
 accompanist-pager = { module = "com.google.accompanist:accompanist-pager", version.ref = "accompanistPager" }
 accompanist-pager-indicators = { module = "com.google.accompanist:accompanist-pager-indicators", version.ref = "accompanistPager" }
+accompanist-pager-indicators-v0320 = { module = "com.google.accompanist:accompanist-pager-indicators", version.ref = "accompanistPagerIndicators" }
+accompanist-pager-v0320 = { module = "com.google.accompanist:accompanist-pager", version.ref = "accompanistPagerVersion" }
 androidx-material-icons-extended = { module = "androidx.compose.material:material-icons-extended", version.ref = "materialIconsExtendedVersion" }
 firebase-firestore = { group = "com.google.firebase", name = "firebase-firestore-ktx", version.ref = "firestore" }
 
@@ -53,6 +58,7 @@ play-services-location = { module = "com.google.android.gms:play-services-locati
 play-services-location-v2101 = { module = "com.google.android.gms:play-services-location", version.ref = "playServicesLocationVersion" }
 play-services-maps = { module = "com.google.android.gms:play-services-maps", version.ref = "playServicesMaps" }
 firebase-storage-ktx = { group = "com.google.firebase", name = "firebase-storage-ktx", version.ref = "firebaseStorageKtx" }
+firebase-crashlytics-buildtools = { group = "com.google.firebase", name = "firebase-crashlytics-buildtools", version.ref = "firebaseCrashlyticsBuildtools" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

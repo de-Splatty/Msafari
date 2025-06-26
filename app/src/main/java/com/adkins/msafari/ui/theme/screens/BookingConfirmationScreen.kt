@@ -15,6 +15,7 @@ import com.adkins.msafari.firestore.BookingManager
 import com.adkins.msafari.firestore.Driver
 import com.adkins.msafari.models.BookingData
 import com.adkins.msafari.models.Traveler
+import com.adkins.msafari.viewmodels.BookingViewModel
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
 
@@ -25,6 +26,7 @@ fun BookingConfirmationScreen(
     selectedDrivers: List<Driver>,
     bookingData: BookingData,
     travelers: List<Traveler>,
+    bookingViewModel: BookingViewModel,
     onBookingSuccess: () -> Unit,
     onBookingFailure: (String) -> Unit,
     onBack: () -> Unit
@@ -69,6 +71,11 @@ fun BookingConfirmationScreen(
             }
 
             Divider(color = colorScheme.primary)
+
+            // ✅ Newly added
+            Text("Pickup Location: ${bookingData.pickupLocation}", color = colorScheme.onBackground)
+            Text("Destination: ${bookingData.destinationLocation}", color = colorScheme.onBackground)
+
             Text("Travel Date: ${bookingData.travelDate}", color = colorScheme.onBackground)
             Text("Return Date: ${bookingData.returnDate}", color = colorScheme.onBackground)
             Text("Travelers: ${travelers.size}", color = colorScheme.onBackground)
@@ -114,6 +121,7 @@ fun BookingConfirmationScreen(
                                         commission = commission,
                                         onSuccess = {
                                             isLoading = false
+                                            bookingViewModel.setActiveTrip(true)
                                             onBookingSuccess()
                                         },
                                         onFailure = { error ->

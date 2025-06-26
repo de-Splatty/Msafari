@@ -1,11 +1,15 @@
 package com.adkins.msafari.auth
 
 import android.annotation.SuppressLint
+import android.content.Context
+import com.adkins.msafari.models.User
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 
 object AuthManager {
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
+
+    val currentUser get() = auth.currentUser
 
     @SuppressLint("StaticFieldLeak")
     private val firestore: FirebaseFirestore = FirebaseFirestore.getInstance()
@@ -45,11 +49,35 @@ object AuthManager {
     fun signIn(
         email: String,
         password: String,
+        context: Context,
         onSuccess: () -> Unit,
         onFailure: (String) -> Unit
     ) {
         auth.signInWithEmailAndPassword(email, password)
-            .addOnSuccessListener { onSuccess() }
+            .addOnSuccessListener {
+                val uid = auth.currentUser?.uid
+                if (uid != null) {
+                    firestore.collection("users").document(uid).get()
+                        .addOnSuccessListener { doc ->
+                            val name = doc.getString("name") ?: email
+                            val profileImage = doc.getString("profileImageUrl") ?: ""
+                            val user = User(
+                                uid = uid,
+                                name = name,
+                                email = email,
+                                profileImageUrl = profileImage
+                            )
+                            AccountManager.init(context)
+                            AccountManager.saveAccount(user)
+                            onSuccess()
+                        }
+                        .addOnFailureListener { e ->
+                            onFailure(e.message ?: "Failed to load user data.")
+                        }
+                } else {
+                    onFailure("User not found.")
+                }
+            }
             .addOnFailureListener { e ->
                 onFailure(e.message ?: "Login failed.")
             }
@@ -103,8 +131,19 @@ object AuthManager {
             }
     }
 
+    fun sendPasswordResetEmail(
+        email: String,
+        onSuccess: () -> Unit,
+        onFailure: (String) -> Unit
+    ) {
+        auth.sendPasswordResetEmail(email)
+            .addOnSuccessListener { onSuccess() }
+            .addOnFailureListener { e ->
+                onFailure(e.message ?: "Failed to send reset email.")
+            }
+    }
+
     fun logout() {
         auth.signOut()
     }
-
 }

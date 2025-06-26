@@ -1,6 +1,7 @@
 package com.adkins.msafari.navigation
 
 sealed class Screen(val route: String) {
+
     object Login : Screen("login")
     object Signup : Screen("signup")
     object ClientHome : Screen("client_home")
@@ -11,19 +12,20 @@ sealed class Screen(val route: String) {
     object DriverProfile : Screen("driver_profile")
     object BookingConfirmation : Screen("booking_confirmation")
 
-
-
     object TravelerDetails : Screen("travelerDetails/{number}/{children}") {
         fun createRoute(number: Int, children: Int) = "travelerDetails/$number/$children"
     }
-
 
     object AvailableDrivers : Screen("available_drivers/{travelDate}/{returnDate}") {
         fun createRoute(travelDate: String, returnDate: String) =
             "available_drivers/$travelDate/$returnDate"
     }
 
+    object Profile : Screen("profile")
+    object SwitchAccount : Screen("switch_account")
+
+    object PendingSafaris : Screen("pending_safaris")
 
 
-    // Add more screens like BookingConfirmation if needed
+    object ClientTripStatus : Screen("client_trip_status")
 }

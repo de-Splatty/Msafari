@@ -2,10 +2,12 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <!-- Features -->
     <uses-feature
         android:name="android.hardware.camera"
         android:required="false" />
 
+    <!-- Permissions -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
@@ -17,10 +19,7 @@
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 
-
-
     <application
-
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -30,16 +29,19 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Msafari"
         tools:targetApi="31">
+
+        <!-- Main Activity -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
             android:theme="@style/Theme.Msafari">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- OSMDroid Metadata -->
         <meta-data
             android:name="osmdroid.basePath"
             android:value="osmdroid" />
@@ -47,6 +49,10 @@
             android:name="osmdroid.cachePath"
             android:value="osmdroid/cache" />
 
-    </application>
+        <!-- ✅ Geofence Broadcast Receiver -->
+        <receiver
+            android:name="com.adkins.msafari.receiver.GeofenceBroadcastReceiver"
+            android:exported="true" />
 
+    </application>
 </manifest>
