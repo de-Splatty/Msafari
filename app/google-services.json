@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "373394984023",
+    "project_id": "msafari-c7767",
+    "storage_bucket": "msafari-c7767.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:373394984023:android:bdd6e2b7e223420dbd2712",
+        "android_client_info": {
+          "package_name": "com.adkins.msafari"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB_WHcODjRLTTCgsKjW2xGnGi_a2I293lQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
