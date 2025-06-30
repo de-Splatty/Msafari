@@ -3,12 +3,12 @@ package com.adkins.msafari.auth
 import android.annotation.SuppressLint
 import android.content.Context
 import com.adkins.msafari.models.User
+import com.adkins.msafari.utils.ErrorLogger
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 
 object AuthManager {
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
-
     val currentUser get() = auth.currentUser
 
     @SuppressLint("StaticFieldLeak")
@@ -35,13 +35,16 @@ object AuthManager {
                         .set(userData)
                         .addOnSuccessListener { onSuccess() }
                         .addOnFailureListener { e ->
+                            ErrorLogger.logError("Failed to save user data during signUp", e, uid)
                             onFailure(e.message ?: "Failed to save user data.")
                         }
                 } else {
+                    ErrorLogger.logError("Sign-up failed: User ID is null")
                     onFailure("User ID is null.")
                 }
             }
             .addOnFailureListener { e ->
+                ErrorLogger.logError("Sign-up failed for $email", e)
                 onFailure(e.message ?: "Sign-up failed.")
             }
     }
@@ -60,32 +63,58 @@ object AuthManager {
                     firestore.collection("users").document(uid).get()
                         .addOnSuccessListener { doc ->
                             val name = doc.getString("name") ?: email
-                            val profileImage = doc.getString("profileImageUrl") ?: ""
+
                             val user = User(
                                 uid = uid,
                                 name = name,
                                 email = email,
-                                profileImageUrl = profileImage
+
                             )
                             AccountManager.init(context)
                             AccountManager.saveAccount(user)
                             onSuccess()
                         }
                         .addOnFailureListener { e ->
+                            ErrorLogger.logError("Failed to load user data during signIn", e, uid)
                             onFailure(e.message ?: "Failed to load user data.")
                         }
                 } else {
+                    ErrorLogger.logError("Sign-in failed: User not found after signIn for $email")
                     onFailure("User not found.")
                 }
             }
             .addOnFailureListener { e ->
+                ErrorLogger.logError("Login failed for $email", e)
                 onFailure(e.message ?: "Login failed.")
             }
     }
 
-    fun getCurrentUserId(): String? {
-        return auth.currentUser?.uid
+    fun loginFromAccount(
+        user: User,
+        context: Context,
+        onSuccess: (String) -> Unit,
+        onFailure: (String) -> Unit
+    ) {
+        auth.signOut()
+
+        firestore.collection("users").document(user.uid).get()
+            .addOnSuccessListener { doc ->
+                val role = doc.getString("role") ?: "client"
+                val updatedUser = user.copy(
+                    name = doc.getString("name") ?: user.name,
+
+                )
+                AccountManager.init(context)
+                AccountManager.saveAccount(updatedUser)
+                onSuccess(role.lowercase())
+            }
+            .addOnFailureListener { e ->
+                ErrorLogger.logError("Failed to loginFromAccount for ${user.uid}", e, user.uid)
+                onFailure(e.message ?: "Failed to login from account.")
+            }
     }
+
+    fun getCurrentUserId(): String? = auth.currentUser?.uid
 
     fun fetchUserRole(
         onRoleFetched: (String) -> Unit,
@@ -93,6 +122,7 @@ object AuthManager {
     ) {
         val uid = auth.currentUser?.uid
         if (uid == null) {
+            ErrorLogger.logError("fetchUserRole failed: user not logged in")
             onFailure("User not logged in.")
             return
         }
@@ -103,10 +133,12 @@ object AuthManager {
                 if (role != null) {
                     onRoleFetched(role)
                 } else {
+                    ErrorLogger.logError("Role not found for $uid", null, uid)
                     onFailure("Role not found.")
                 }
             }
             .addOnFailureListener { e ->
+                ErrorLogger.logError("Failed to fetch role for $uid", e, uid)
                 onFailure(e.message ?: "Failed to fetch role.")
             }
     }
@@ -117,6 +149,7 @@ object AuthManager {
     ) {
         val uid = auth.currentUser?.uid
         if (uid == null) {
+            ErrorLogger.logError("fetchUserName failed: user not logged in")
             onError("User not logged in.")
             return
         }
@@ -127,7 +160,35 @@ object AuthManager {
                 onResult(name)
             }
             .addOnFailureListener { e ->
+                ErrorLogger.logError("Failed to fetch user name for $uid", e, uid)
                 onError(e.message ?: "Failed to fetch user name.")
+            }
+    }
+
+    fun fetchCurrentUserDetails(
+        onResult: (User?) -> Unit,
+        onError: (String) -> Unit
+    ) {
+        val uid = auth.currentUser?.uid
+        if (uid == null) {
+            ErrorLogger.logError("fetchCurrentUserDetails failed: user not logged in")
+            onError("User not logged in.")
+            return
+        }
+
+        firestore.collection("users").document(uid).get()
+            .addOnSuccessListener { doc ->
+                val user = User(
+                    uid = uid,
+                    name = doc.getString("name") ?: "Unknown",
+                    email = doc.getString("email") ?: "No email",
+
+                )
+                onResult(user)
+            }
+            .addOnFailureListener { e ->
+                ErrorLogger.logError("Failed to fetch user details for $uid", e, uid)
+                onError(e.message ?: "Failed to fetch user details.")
             }
     }
 
@@ -139,6 +200,7 @@ object AuthManager {
         auth.sendPasswordResetEmail(email)
             .addOnSuccessListener { onSuccess() }
             .addOnFailureListener { e ->
+                ErrorLogger.logError("Failed to send password reset email to $email", e)
                 onFailure(e.message ?: "Failed to send reset email.")
             }
     }

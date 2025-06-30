@@ -1,10 +1,12 @@
 package com.adkins.msafari.firestore
 
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RequiresApi
 import com.adkins.msafari.models.Booking
 import com.adkins.msafari.models.BookingData
 import com.adkins.msafari.models.Traveler
+import com.adkins.msafari.utils.ErrorLogger
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -28,7 +30,7 @@ object BookingManager {
         val bookingId = db.collection("bookings").document().id
         val booking = Booking(
             clientId = clientId,
-            driverId = "", // Not assigned until one accepts
+            driverId = "",
             vehicleType = bookingData.vehicleType,
             travelDate = bookingData.travelDate,
             returnDate = bookingData.returnDate,
@@ -78,14 +80,17 @@ object BookingManager {
                         com.google.android.gms.tasks.Tasks.whenAllSuccess<Any>(requestTasks)
                             .addOnSuccessListener { onSuccess() }
                             .addOnFailureListener { e ->
+                                ErrorLogger.logError("Failed to send booking to drivers", e, auth.currentUser?.uid)
                                 onFailure(e.message ?: "Failed to send booking to drivers.")
                             }
                     }
                     .addOnFailureListener { e ->
+                        ErrorLogger.logError("Failed to save travelers", e, auth.currentUser?.uid)
                         onFailure(e.message ?: "Failed to save travelers.")
                     }
             }
             .addOnFailureListener { e ->
+                ErrorLogger.logError("Failed to save booking", e, auth.currentUser?.uid)
                 onFailure(e.message ?: "Failed to save booking.")
             }
     }
@@ -109,7 +114,6 @@ object BookingManager {
                     "approvedBy" to driverId
                 ))
 
-                // Remove from other drivers' booking_requests
                 db.collection("drivers")
                     .get()
                     .addOnSuccessListener { result ->
@@ -126,7 +130,10 @@ object BookingManager {
                     }
             }
         }.addOnSuccessListener { onSuccess() }
-            .addOnFailureListener { e -> onFailure(e.message ?: "Failed to approve booking.") }
+            .addOnFailureListener { e ->
+                ErrorLogger.logError("Failed to approve booking", e, auth.currentUser?.uid)
+                onFailure(e.message ?: "Failed to approve booking.")
+            }
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
@@ -148,6 +155,9 @@ object BookingManager {
                     }
                 }
             }
+            .addOnFailureListener { e ->
+                ErrorLogger.logError("Failed to auto-expire old bookings", e, auth.currentUser?.uid)
+            }
     }
 
     fun getBookingsForUser(
@@ -163,6 +173,7 @@ object BookingManager {
                 onSuccess(bookings)
             }
             .addOnFailureListener { e ->
+                ErrorLogger.logError("Failed to fetch bookings for user", e, userId)
                 onFailure(e.message ?: "Failed to fetch bookings.")
             }
     }
@@ -184,6 +195,7 @@ object BookingManager {
                     if (booking != null) {
                         onSuccess(booking)
                     } else {
+                        ErrorLogger.logError("Failed to parse booking", null, clientId)
                         onFailure("Failed to parse booking.")
                     }
                 } else {
@@ -191,6 +203,7 @@ object BookingManager {
                 }
             }
             .addOnFailureListener { e ->
+                ErrorLogger.logError("Error fetching latest booking", e, clientId)
                 onFailure(e.message ?: "Error fetching latest booking.")
             }
     }

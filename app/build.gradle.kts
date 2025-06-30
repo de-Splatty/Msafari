@@ -3,6 +3,8 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.google.gms.google.services)
+
+    id("com.google.firebase.crashlytics")
 }
 
 android {
@@ -41,12 +43,16 @@ android {
 }
 
 dependencies {
+    implementation(platform("com.google.firebase:firebase-bom:33.16.0"))
+    implementation("com.google.firebase:firebase-crashlytics")
+    implementation("com.google.firebase:firebase-analytics")
     implementation ("com.google.android.gms:play-services-location:21.0.1")
     implementation (libs.accompanist.pager.v0320)
     implementation (libs.accompanist.pager.indicators.v0320)
     implementation("com.google.code.gson:gson:2.11.0")
     implementation(libs.firebase.storage.ktx)
     implementation(libs.firebase.crashlytics.buildtools)
+    implementation(libs.firebase.storage)
     val nav_version = "2.9.0"
     implementation("androidx.navigation:navigation-compose:$nav_version")
     implementation("io.coil-kt:coil-compose:2.4.0")

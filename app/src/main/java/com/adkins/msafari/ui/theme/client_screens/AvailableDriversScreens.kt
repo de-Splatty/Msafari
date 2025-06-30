@@ -1,4 +1,4 @@
-package com.adkins.msafari.ui.theme.screens
+package com.adkins.msafari.ui.theme.client_screens
 
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -13,7 +13,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import coil.compose.AsyncImage
 import com.adkins.msafari.firestore.Driver
 import com.adkins.msafari.firestore.DriverManager
 import com.adkins.msafari.models.Traveler
@@ -29,6 +28,7 @@ fun AvailableDriversScreen(
 ) {
     var drivers by remember { mutableStateOf<List<Driver>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
+    var error by remember { mutableStateOf<String?>(null) }
     val selectedDrivers = remember { mutableStateListOf<Driver>() }
 
     LaunchedEffect(Unit) {
@@ -38,8 +38,10 @@ fun AvailableDriversScreen(
             onSuccess = {
                 drivers = it
                 isLoading = false
+                error = null
             },
-            onFailure = {
+            onFailure = { msg ->
+                error = msg
                 isLoading = false
             }
         )
@@ -87,26 +89,38 @@ fun AvailableDriversScreen(
                 .padding(16.dp)
                 .fillMaxSize()
         ) {
-            if (isLoading) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+            when {
+                isLoading -> {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+                    }
                 }
-            } else {
-                LazyColumn {
-                    items(drivers) { driver ->
-                        val isSelected = selectedDrivers.contains(driver)
-                        DriverCard(
-                            driver = driver,
-                            isSelected = isSelected,
-                            onClick = {
-                                if (isSelected) {
-                                    selectedDrivers.remove(driver)
-                                } else if (selectedDrivers.size < 3) {
-                                    selectedDrivers.add(driver)
+
+                error != null -> {
+                    Text("Error: $error", color = MaterialTheme.colorScheme.error)
+                }
+
+                drivers.isEmpty() -> {
+                    Text("No drivers available for the selected dates.", color = MaterialTheme.colorScheme.onBackground)
+                }
+
+                else -> {
+                    LazyColumn {
+                        items(drivers) { driver ->
+                            val isSelected = selectedDrivers.contains(driver)
+                            DriverCard(
+                                driver = driver,
+                                isSelected = isSelected,
+                                onClick = {
+                                    if (isSelected) {
+                                        selectedDrivers.remove(driver)
+                                    } else if (selectedDrivers.size < 3) {
+                                        selectedDrivers.add(driver)
+                                    }
                                 }
-                            }
-                        )
-                        Spacer(modifier = Modifier.height(12.dp))
+                            )
+                            Spacer(modifier = Modifier.height(12.dp))
+                        }
                     }
                 }
             }
@@ -126,24 +140,16 @@ fun DriverCard(driver: Driver, isSelected: Boolean, onClick: () -> Unit) {
             ),
         elevation = CardDefaults.cardElevation(4.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface,
+            containerColor = if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+            else MaterialTheme.colorScheme.surface,
             contentColor = MaterialTheme.colorScheme.onSurface
         )
     ) {
-        Row(modifier = Modifier.padding(16.dp)) {
-            AsyncImage(
-                model = driver.profilePicUrl,
-                contentDescription = "Driver Image",
-                modifier = Modifier.size(64.dp)
-            )
-
-            Spacer(modifier = Modifier.width(16.dp))
-
-            Column {
-                Text(driver.name, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
-                Text("Vehicle: ${driver.vehicleType}", color = MaterialTheme.colorScheme.onSurface)
-                Text("Seats: ${driver.seater}", color = MaterialTheme.colorScheme.onSurface)
-            }
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(driver.name, fontWeight = FontWeight.Bold)
+            Text("Vehicle: ${driver.vehicleType}")
+            Text("Seats: ${driver.seater}")
+            Text("Plate No: ${driver.plateNumber}")
         }
     }
 }

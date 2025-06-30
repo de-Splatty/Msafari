@@ -1,4 +1,4 @@
-package com.adkins.msafari.ui.theme.screens
+package com.adkins.msafari.ui.theme.client_screens
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -12,7 +12,6 @@ import com.adkins.msafari.auth.AuthManager
 import com.adkins.msafari.components.ClientScaffoldWrapper
 import com.adkins.msafari.firestore.BookingManager
 import com.adkins.msafari.models.Booking
-import com.adkins.msafari.navigation.Screen
 import com.google.firebase.Timestamp
 
 @Composable

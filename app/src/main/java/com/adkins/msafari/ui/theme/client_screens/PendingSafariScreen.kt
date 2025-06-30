@@ -1,4 +1,4 @@
-package com.adkins.msafari.ui.theme.screens
+package com.adkins.msafari.ui.theme.client_screens
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn

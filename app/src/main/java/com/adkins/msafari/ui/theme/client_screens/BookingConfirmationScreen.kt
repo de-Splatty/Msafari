@@ -1,4 +1,4 @@
-package com.adkins.msafari.ui.theme.screens
+package com.adkins.msafari.ui.theme.client_screens
 
 import android.os.Build
 import androidx.annotation.RequiresApi
@@ -15,6 +15,7 @@ import com.adkins.msafari.firestore.BookingManager
 import com.adkins.msafari.firestore.Driver
 import com.adkins.msafari.models.BookingData
 import com.adkins.msafari.models.Traveler
+import com.adkins.msafari.utils.ErrorLogger // ✅ Import ErrorLogger
 import com.adkins.msafari.viewmodels.BookingViewModel
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
@@ -72,10 +73,8 @@ fun BookingConfirmationScreen(
 
             Divider(color = colorScheme.primary)
 
-            // ✅ Newly added
             Text("Pickup Location: ${bookingData.pickupLocation}", color = colorScheme.onBackground)
             Text("Destination: ${bookingData.destinationLocation}", color = colorScheme.onBackground)
-
             Text("Travel Date: ${bookingData.travelDate}", color = colorScheme.onBackground)
             Text("Return Date: ${bookingData.returnDate}", color = colorScheme.onBackground)
             Text("Travelers: ${travelers.size}", color = colorScheme.onBackground)
@@ -126,15 +125,18 @@ fun BookingConfirmationScreen(
                                         },
                                         onFailure = { error ->
                                             isLoading = false
+                                            ErrorLogger.logError("Booking save failed", Exception(error), userId)
                                             onBookingFailure(error)
                                         }
                                     )
                                 } catch (e: Exception) {
                                     isLoading = false
+                                    ErrorLogger.logError("Cost calculation failed", e, userId)
                                     onBookingFailure("Error calculating cost: ${e.localizedMessage}")
                                 }
                             } else {
                                 isLoading = false
+                                ErrorLogger.logError("User not logged in during booking", null)
                                 onBookingFailure("User not logged in")
                             }
                         },

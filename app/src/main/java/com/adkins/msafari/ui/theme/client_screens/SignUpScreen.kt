@@ -1,10 +1,13 @@
-package com.adkins.msafari.ui.theme.screens
+package com.adkins.msafari.ui.theme.client_screens
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -12,6 +15,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.adkins.msafari.R
@@ -30,6 +35,8 @@ fun SignupScreen(
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
+    var isPasswordVisible by remember { mutableStateOf(false) }
+    var isConfirmVisible by remember { mutableStateOf(false) }
     var selectedRole by remember { mutableStateOf("Client") }
     var expanded by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
@@ -74,7 +81,7 @@ fun SignupScreen(
                 onValueChange = { name = it },
                 label = { Text("Full Name", color = White) },
                 modifier = Modifier.fillMaxWidth(),
-                colors = textFieldColors()
+                colors = textColors()
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -84,7 +91,7 @@ fun SignupScreen(
                 onValueChange = { email = it },
                 label = { Text("Email", color = White) },
                 modifier = Modifier.fillMaxWidth(),
-                colors = textFieldColors()
+                colors = textColors()
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -93,8 +100,15 @@ fun SignupScreen(
                 value = password,
                 onValueChange = { password = it },
                 label = { Text("Password", color = White) },
+                visualTransformation = if (isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                trailingIcon = {
+                    val icon = if (isPasswordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility
+                    IconButton(onClick = { isPasswordVisible = !isPasswordVisible }) {
+                        Icon(icon, contentDescription = null, tint = White)
+                    }
+                },
                 modifier = Modifier.fillMaxWidth(),
-                colors = textFieldColors()
+                colors = textColors()
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -103,8 +117,15 @@ fun SignupScreen(
                 value = confirmPassword,
                 onValueChange = { confirmPassword = it },
                 label = { Text("Confirm Password", color = White) },
+                visualTransformation = if (isConfirmVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                trailingIcon = {
+                    val icon = if (isConfirmVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility
+                    IconButton(onClick = { isConfirmVisible = !isConfirmVisible }) {
+                        Icon(icon, contentDescription = null, tint = White)
+                    }
+                },
                 modifier = Modifier.fillMaxWidth(),
-                colors = textFieldColors()
+                colors = textColors()
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -121,7 +142,7 @@ fun SignupScreen(
                     modifier = Modifier
                         .menuAnchor()
                         .fillMaxWidth(),
-                    colors = textFieldColors()
+                    colors = textColors()
                 )
 
                 ExposedDropdownMenu(
@@ -177,3 +198,14 @@ fun SignupScreen(
         }
     }
 }
+
+@Composable
+fun textColors(): TextFieldColors = OutlinedTextFieldDefaults.colors(
+    focusedBorderColor = Green,
+    unfocusedBorderColor = Color.Gray,
+    focusedLabelColor = Green,
+    cursorColor = Green,
+    unfocusedLabelColor = White,
+    focusedTextColor = White,
+    unfocusedTextColor = White
+)

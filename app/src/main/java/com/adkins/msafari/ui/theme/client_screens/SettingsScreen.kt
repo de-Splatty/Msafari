@@ -1,4 +1,4 @@
-package com.adkins.msafari.ui.theme.screens
+package com.adkins.msafari.ui.theme.client_screens
 
 import android.content.Intent
 import android.net.Uri
@@ -18,7 +18,6 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.adkins.msafari.auth.AuthManager
 import com.adkins.msafari.components.ClientScaffoldWrapper
-import com.adkins.msafari.navigation.Screen
 import com.adkins.msafari.utils.NotificationUtils
 import com.adkins.msafari.viewmodels.SettingsViewModel
 

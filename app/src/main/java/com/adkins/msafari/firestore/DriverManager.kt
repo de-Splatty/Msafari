@@ -1,7 +1,8 @@
 package com.adkins.msafari.firestore
 
-import com.google.firebase.firestore.FirebaseFirestore
+import com.adkins.msafari.utils.ErrorLogger
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 
 data class Driver(
     val id: String = "",
@@ -9,7 +10,8 @@ data class Driver(
     val plateNumber: String = "",
     val vehicleType: String = "",
     val seater: Int = 0,
-    val profilePicUrl: String = ""
+    val phoneNumber: String = "",
+    val nationalId: String = ""
 )
 
 object DriverManager {
@@ -30,6 +32,7 @@ object DriverManager {
                 onSuccess(drivers)
             }
             .addOnFailureListener { e ->
+                ErrorLogger.logError("Error fetching available drivers", e, null)
                 onFailure(e.message ?: "Error fetching drivers.")
             }
     }
@@ -44,15 +47,20 @@ object DriverManager {
                 val plate = doc.getString("plateNumber")
                 val type = doc.getString("vehicleType")
                 val seats = doc.getLong("seater")
+                val phone = doc.getString("phoneNumber")
+                val nationalId = doc.getString("nationalId")
 
                 val complete = !name.isNullOrBlank() &&
                         !plate.isNullOrBlank() &&
                         !type.isNullOrBlank() &&
-                        seats != null && seats > 0
+                        seats != null && seats > 0 &&
+                        !phone.isNullOrBlank() &&
+                        !nationalId.isNullOrBlank()
 
                 onResult(complete)
             }
-            .addOnFailureListener {
+            .addOnFailureListener { e ->
+                ErrorLogger.logError("Failed to check driver profile completeness", e, driverId)
                 onResult(false)
             }
     }
@@ -61,26 +69,54 @@ object DriverManager {
         name: String,
         plateNumber: String,
         vehicleType: String,
-        seater: Int,
-        profilePicUrl: String,
+        seater: Int?,
+        phoneNumber: String,
+        nationalId: String,
         onSuccess: () -> Unit,
         onFailure: (String) -> Unit
     ) {
-        val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return
+        val uid = FirebaseAuth.getInstance().currentUser?.uid
+        if (uid == null) {
+            val msg = "User not logged in while trying to save driver profile."
+            ErrorLogger.logError(msg, userId = null)
+            onFailure(msg)
+            return
+        }
 
         val data = mapOf(
+            "uid" to uid,
             "name" to name,
             "plateNumber" to plateNumber,
             "vehicleType" to vehicleType,
             "seater" to seater,
-            "profilePicUrl" to profilePicUrl,
-            "uid" to uid
+            "phoneNumber" to phoneNumber,
+            "nationalId" to nationalId,
+            "isProfileComplete" to true
         )
 
         firestore.collection("drivers")
             .document(uid)
             .set(data)
             .addOnSuccessListener { onSuccess() }
-            .addOnFailureListener { e -> onFailure(e.message ?: "Failed to save driver profile.") }
+            .addOnFailureListener { e ->
+                ErrorLogger.logError("Failed to save driver profile", e, uid)
+                onFailure(e.message ?: "Failed to save driver profile.")
+            }
+    }
+
+    fun getDriverProfile(
+        driverId: String,
+        onResult: (Driver?) -> Unit
+    ) {
+        firestore.collection("drivers").document(driverId)
+            .get()
+            .addOnSuccessListener { doc ->
+                val driver = doc.toObject(Driver::class.java)?.copy(id = doc.id)
+                onResult(driver)
+            }
+            .addOnFailureListener { e ->
+                ErrorLogger.logError("Failed to fetch driver profile", e, driverId)
+                onResult(null)
+            }
     }
 }

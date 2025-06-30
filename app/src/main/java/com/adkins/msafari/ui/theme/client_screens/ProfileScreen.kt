@@ -1,4 +1,4 @@
-package com.adkins.msafari.ui.theme.screens
+package com.adkins.msafari.ui.theme.client_screens
 
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -156,7 +156,19 @@ fun ProfileScreen(
                                     text = { Text(account.name) },
                                     onClick = {
                                         dropdownExpanded = false
-                                        onSwitchAccount()
+                                        AuthManager.loginFromAccount(
+                                            user = account,
+                                            context = context,
+                                            onSuccess = { role ->
+                                                when (role) {
+                                                    "client" -> onNavigate("client_dashboard")
+                                                    "driver" -> onNavigate("driver_dashboard")
+                                                    "incomplete_driver" -> onNavigate("complete_driver_profile")
+                                                    else -> onNavigate("home")
+                                                }
+                                            },
+                                            onFailure = { /* TODO: show toast/snackbar */ }
+                                        )
                                     }
                                 )
                             }

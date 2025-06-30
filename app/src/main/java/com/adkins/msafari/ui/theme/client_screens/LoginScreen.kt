@@ -1,11 +1,13 @@
-package com.adkins.msafari.ui.theme.screens
+package com.adkins.msafari.ui.theme.client_screens
 
-import android.content.Context
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -14,6 +16,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.adkins.msafari.R
@@ -24,6 +28,7 @@ import com.adkins.msafari.models.User
 import com.adkins.msafari.ui.theme.Black
 import com.adkins.msafari.ui.theme.Green
 import com.adkins.msafari.ui.theme.White
+import com.adkins.msafari.utils.ErrorLogger
 
 @Composable
 fun LoginScreen(
@@ -32,6 +37,7 @@ fun LoginScreen(
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    var isPasswordVisible by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
     val context = LocalContext.current
 
@@ -81,6 +87,13 @@ fun LoginScreen(
                 value = password,
                 onValueChange = { password = it },
                 label = { Text("Password", color = White) },
+                visualTransformation = if (isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                trailingIcon = {
+                    val icon = if (isPasswordVisible) Icons.Filled.VisibilityOff else Icons.Filled.Visibility
+                    IconButton(onClick = { isPasswordVisible = !isPasswordVisible }) {
+                        Icon(imageVector = icon, contentDescription = "Toggle password visibility", tint = White)
+                    }
+                },
                 modifier = Modifier.fillMaxWidth(),
                 colors = textFieldColors()
             )
@@ -97,7 +110,7 @@ fun LoginScreen(
                     AuthManager.signIn(
                         email,
                         password,
-                        context, // ✅ Pass context here
+                        context,
                         onSuccess = {
                             AuthManager.fetchUserRole(
                                 onRoleFetched = { role ->
@@ -110,33 +123,38 @@ fun LoginScreen(
                                                     name = name,
                                                     email = email
                                                 )
-                                                AccountManager.saveAccount(user) // context already initialized in App startup
+                                                AccountManager.saveAccount(user)
                                             },
-                                            onError = { /* Fallback: skip saving */ }
-                                        )
-                                    }
-
-                                    if (role.lowercase() == "driver") {
-                                        val currentDriverId = AuthManager.getCurrentUserId()
-                                        if (currentDriverId != null) {
-                                            DriverManager.isDriverProfileComplete(currentDriverId) { isComplete ->
-                                                if (isComplete) {
-                                                    onLoginSuccess("driver")
-                                                } else {
-                                                    onLoginSuccess("incomplete_driver")
-                                                }
+                                            onError = {
+                                                ErrorLogger.logError(
+                                                    "Failed to fetch username after login",
+                                                    Exception(it),
+                                                    uid
+                                                )
                                             }
+                                        )
+
+                                        // ✅ Redirect directly to driver dashboard
+                                        if (role.lowercase() == "driver") {
+                                            onLoginSuccess("driver")
                                         } else {
-                                            error = "Failed to get driver ID"
+                                            onLoginSuccess(role)
                                         }
                                     } else {
-                                        onLoginSuccess(role)
+                                        error = "Failed to get user ID"
+                                        ErrorLogger.logError("Login succeeded but UID was null", null)
                                     }
                                 },
-                                onFailure = { error = it }
+                                onFailure = {
+                                    error = it
+                                    ErrorLogger.logError("Failed to fetch user role", Exception(it))
+                                }
                             )
                         },
-                        onFailure = { error = it }
+                        onFailure = {
+                            error = it
+                            ErrorLogger.logError("Login failed", Exception(it), email)
+                        }
                     )
                 },
                 modifier = Modifier.fillMaxWidth(),

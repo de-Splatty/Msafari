@@ -1,19 +1,21 @@
-package com.adkins.msafari.ui.theme.screens
+package com.adkins.msafari.ui.theme.client_screens
 
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.Colors
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.adkins.msafari.models.BookingData
+import com.adkins.msafari.ui.theme.Green
+import com.adkins.msafari.ui.theme.White
 import java.time.LocalDate
 import java.util.*
 
@@ -72,25 +74,21 @@ fun BookingScreen(
         )
     }
 
-    val colorScheme = MaterialTheme.colorScheme
-
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("New Booking", color = colorScheme.onPrimary) },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = colorScheme.primary,
-                    titleContentColor = colorScheme.onPrimary
-                )
+                title = { Text("New Booking", color = White) },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Green)
             )
         },
-        containerColor = colorScheme.background
+        containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
         Column(
             modifier = Modifier
                 .padding(innerPadding)
                 .padding(24.dp)
-                .fillMaxSize(),
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             ExposedDropdownMenuBox(
@@ -101,12 +99,13 @@ fun BookingScreen(
                     value = selectedVehicle,
                     onValueChange = {},
                     readOnly = true,
-                    label = { Text("Vehicle Type") },
-                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                    label = { Text("Vehicle Type", color = White) },
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
                     colors = ExposedDropdownMenuDefaults.textFieldColors(),
-                    modifier = Modifier.menuAnchor().fillMaxWidth()
+                    modifier = Modifier
+                        .menuAnchor()
+                        .fillMaxWidth()
                 )
-
                 ExposedDropdownMenu(
                     expanded = expanded,
                     onDismissRequest = { expanded = false }
@@ -127,22 +126,22 @@ fun BookingScreen(
                 value = numberOfTravelers,
                 onValueChange = { numberOfTravelers = it },
                 label = { Text("Number of Travelers") },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true
             )
 
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Has Children?", color = colorScheme.onBackground)
+                Text("Has Children?", color = White)
+                Spacer(modifier = Modifier.weight(1f))
                 Switch(
                     checked = hasChildren,
                     onCheckedChange = { hasChildren = it },
                     colors = SwitchDefaults.colors(
-                        checkedThumbColor = colorScheme.primary,
-                        uncheckedThumbColor = colorScheme.onBackground
+                        checkedThumbColor = Green,
+                        uncheckedThumbColor = White
                     )
                 )
             }
@@ -152,8 +151,8 @@ fun BookingScreen(
                     value = numberOfChildren,
                     onValueChange = { numberOfChildren = it },
                     label = { Text("Number of Children") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
                 )
             }
 
@@ -161,40 +160,40 @@ fun BookingScreen(
                 value = pickupLocation,
                 onValueChange = { pickupLocation = it },
                 label = { Text("Pickup Location") },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true
             )
 
             OutlinedTextField(
                 value = destinationLocation,
                 onValueChange = { destinationLocation = it },
                 label = { Text("Destination Location") },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true
             )
 
             Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                 Button(onClick = { travelDatePicker.show() }) {
                     Text("Pick Travel Date")
                 }
-                Text(text = travelDate, color = colorScheme.onBackground)
+                Text(travelDate, color = White)
             }
 
             Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                 Button(onClick = { returnDatePicker.show() }) {
                     Text("Pick Return Date")
                 }
-                Text(text = returnDate, color = colorScheme.onBackground)
+                Text(returnDate, color = White)
             }
 
             Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                 Button(onClick = { timePicker.show() }) {
                     Text("Pick Pickup Time")
                 }
-                Text(text = pickupTime, color = colorScheme.onBackground)
+                Text(pickupTime, color = White)
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
             Button(
                 onClick = {
@@ -219,16 +218,16 @@ fun BookingScreen(
                     }
                 },
                 modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = colorScheme.primary,
-                    contentColor = colorScheme.onPrimary
-                )
+                colors = ButtonDefaults.buttonColors(containerColor = Green)
             ) {
-                Text("Continue", color = Color.White)
+                Text("Continue", color = White)
             }
 
             if (showError) {
-                Text("Please fill all required fields properly.", color = colorScheme.error)
+                Text(
+                    "Please fill all required fields properly.",
+                    color = MaterialTheme.colorScheme.error
+                )
             }
         }
     }

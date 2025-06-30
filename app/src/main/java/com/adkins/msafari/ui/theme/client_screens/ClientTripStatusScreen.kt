@@ -1,4 +1,4 @@
-package com.adkins.msafari.ui.theme.screens
+package com.adkins.msafari.ui.theme.client_screens
 
 import android.Manifest
 import android.content.pm.PackageManager
@@ -24,7 +24,6 @@ import com.adkins.msafari.auth.AuthManager
 import com.adkins.msafari.components.ClientScaffoldWrapper
 import com.adkins.msafari.firestore.BookingManager
 import com.adkins.msafari.models.Booking
-import com.adkins.msafari.navigation.Screen
 import com.google.android.gms.location.*
 import kotlinx.coroutines.awaitCancellation
 import org.osmdroid.config.Configuration

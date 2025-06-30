@@ -9,7 +9,8 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
-import com.adkins.msafari.ui.theme.screens.*
+import com.adkins.msafari.ui.theme.client_screens.*
+import com.adkins.msafari.ui.theme.driver_screens.*
 import com.adkins.msafari.viewmodels.BookingViewModel
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -30,8 +31,12 @@ fun MsafariNavGraph(
 
     NavHost(
         navController = navController,
-        startDestination = Screen.Login.route
+        startDestination = Screen.SplashScreen.route
     ) {
+        composable(Screen.SplashScreen.route) {
+            SplashScreen(navController = navController)
+        }
+
         composable(Screen.Login.route) {
             LoginScreen(
                 onLoginSuccess = { role ->
@@ -42,12 +47,14 @@ fun MsafariNavGraph(
                         "driver" -> navController.navigate(Screen.DriverDashboard.route) {
                             popUpTo(Screen.Login.route) { inclusive = true }
                         }
-                        "incomplete_driver" -> navController.navigate(Screen.DriverProfile.route) {
+                        else -> navController.navigate(Screen.Login.route) {
                             popUpTo(Screen.Login.route) { inclusive = true }
                         }
                     }
                 },
-                onSwitchToSignup = { navController.navigate(Screen.Signup.route) }
+                onSwitchToSignup = {
+                    navController.navigate(Screen.Signup.route)
+                }
             )
         }
 
@@ -152,9 +159,11 @@ fun MsafariNavGraph(
                     selectedDrivers = bookingViewModel.selectedDrivers,
                     travelers = travelers,
                     onBookingSuccess = {
-                        navController.navigate(Screen.ClientTripStatus.route)
+                        navController.navigate(Screen.ClientTripStatus.route) {
+                            popUpTo(Screen.ClientHome.route)
+                        }
                     },
-                    onBookingFailure = { /* handle if needed */ },
+                    onBookingFailure = {},
                     onBack = { navController.popBackStack() }
                 )
             }
@@ -164,17 +173,6 @@ fun MsafariNavGraph(
             ClientTripStatusScreen(
                 currentRoute = currentRoute,
                 onNavigate = onNavigate
-            )
-        }
-
-        composable(Screen.DriverDashboard.route) {
-            DriverDashboardScreen(
-                onLogout = {
-                    navController.navigate(Screen.Login.route) {
-                        popUpTo(Screen.DriverDashboard.route) { inclusive = true }
-                    }
-                },
-
             )
         }
 
@@ -197,21 +195,20 @@ fun MsafariNavGraph(
             )
         }
 
-        composable(Screen.DriverProfile.route) {
-            DriverProfileCompletionScreen(
-                onSubmit = {
-                    navController.navigate(Screen.DriverDashboard.route) {
-                        popUpTo(Screen.DriverProfile.route) { inclusive = true }
-                    }
-                },
-                onBack = { navController.popBackStack() }
-            )
-        }
-
         composable(Screen.Profile.route) {
             ProfileScreen(
                 currentRoute = currentRoute,
-                onNavigate = onNavigate
+                onNavigate = onNavigate,
+                onLogout = {
+                    navController.navigate(Screen.Login.route) {
+                        popUpTo(Screen.Profile.route) { inclusive = true }
+                    }
+                },
+                onSwitchAccount = {
+                    navController.navigate(Screen.Login.route) {
+                        popUpTo(Screen.Profile.route) { inclusive = true }
+                    }
+                }
             )
         }
 
@@ -220,6 +217,72 @@ fun MsafariNavGraph(
                 currentRoute = currentRoute,
                 onNavigate = onNavigate
             )
+        }
+
+        composable(Screen.DriverDashboard.route) {
+            DriverDashboardScreen(
+                onLogout = {
+                    navController.navigate(Screen.Login.route) {
+                        popUpTo(Screen.DriverDashboard.route) { inclusive = true }
+                    }
+                },
+                onNavigateToSettings = {
+                    navController.navigate(Screen.DriverSettings.route)
+                },
+                onNavigateToProfile = {
+                    navController.navigate(Screen.DriverProfile.route)
+                },
+                onNavigateToPayments = {
+                    navController.navigate(Screen.DriverPayments.route)
+                },
+                onNavigateToPastDrives = {
+                    navController.navigate(Screen.PastDrives.route)
+                },
+                onNavigateToAlerts = TODO()
+            )
+        }
+
+        composable(Screen.DriverProfile.route) {
+            DriverProfileScreen(
+                onLogout = {
+                    navController.navigate(Screen.Login.route) {
+                        popUpTo(Screen.DriverProfile.route) { inclusive = true }
+                    }
+                },
+                onSwitchAccount = {
+                    navController.navigate(Screen.Login.route) {
+                        popUpTo(Screen.DriverProfile.route) { inclusive = true }
+                    }
+                },
+                onNavigateToDashboard = {
+                    navController.navigate(Screen.DriverDashboard.route) {
+                        popUpTo(Screen.DriverProfile.route) { inclusive = true }
+                    }
+                }
+            )
+        }
+
+        composable(Screen.DriverSettings.route) {
+            DriverSettingsScreen(
+                onLogout = {
+                    navController.navigate(Screen.Login.route) {
+                        popUpTo(Screen.DriverSettings.route) { inclusive = true }
+                    }
+                },
+                onNavigateBack = {
+                    navController.navigate(Screen.DriverDashboard.route) {
+                        popUpTo(Screen.DriverSettings.route) { inclusive = true }
+                    }
+                }
+            )
+        }
+
+        composable(Screen.DriverPayments.route) {
+            DriverPaymentsScreen()
+        }
+
+        composable(Screen.PastDrives.route) {
+            PastDrivesScreen()
         }
     }
 }
