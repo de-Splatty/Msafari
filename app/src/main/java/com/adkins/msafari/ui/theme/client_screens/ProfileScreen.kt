@@ -30,6 +30,8 @@ import com.adkins.msafari.auth.AccountManager
 import com.adkins.msafari.auth.AuthManager
 import com.adkins.msafari.components.ClientScaffoldWrapper
 import com.adkins.msafari.models.User
+import com.adkins.msafari.navigation.Screen
+import com.adkins.msafari.firestore.UserManager // ✅ New import
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -153,22 +155,28 @@ fun ProfileScreen(
                         } else {
                             savedAccounts.forEach { account ->
                                 DropdownMenuItem(
-                                    text = { Text(account.name) },
+                                    text = {
+                                        Column {
+                                            Text(account.name, fontWeight = FontWeight.SemiBold)
+                                            Text(
+                                                text = account.role.replaceFirstChar { it.uppercase() },
+                                                fontSize = 12.sp,
+                                                color = Color.Gray
+                                            )
+                                        }
+                                    },
                                     onClick = {
                                         dropdownExpanded = false
-                                        AuthManager.loginFromAccount(
-                                            user = account,
-                                            context = context,
-                                            onSuccess = { role ->
-                                                when (role) {
-                                                    "client" -> onNavigate("client_dashboard")
-                                                    "driver" -> onNavigate("driver_dashboard")
-                                                    "incomplete_driver" -> onNavigate("complete_driver_profile")
-                                                    else -> onNavigate("home")
-                                                }
-                                            },
-                                            onFailure = { /* TODO: show toast/snackbar */ }
-                                        )
+                                        AccountManager.setCurrentAccount(account)
+
+                                        // ✅ Save to Firestore on switch
+                                        UserManager.saveUserToFirestore(account)
+
+                                        when (account.role.lowercase()) {
+                                            "client" -> onNavigate(Screen.ClientHome.route)
+                                            "driver" -> onNavigate(Screen.DriverDashboard.route)
+                                            else -> onNavigate(Screen.Login.route)
+                                        }
                                     }
                                 )
                             }

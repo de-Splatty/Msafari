@@ -63,13 +63,15 @@ object AuthManager {
                     firestore.collection("users").document(uid).get()
                         .addOnSuccessListener { doc ->
                             val name = doc.getString("name") ?: email
+                            val role = doc.getString("role") ?: "client"
 
                             val user = User(
                                 uid = uid,
                                 name = name,
                                 email = email,
-
+                                role = role
                             )
+
                             AccountManager.init(context)
                             AccountManager.saveAccount(user)
                             onSuccess()
@@ -102,7 +104,7 @@ object AuthManager {
                 val role = doc.getString("role") ?: "client"
                 val updatedUser = user.copy(
                     name = doc.getString("name") ?: user.name,
-
+                    role = role
                 )
                 AccountManager.init(context)
                 AccountManager.saveAccount(updatedUser)
@@ -182,7 +184,7 @@ object AuthManager {
                     uid = uid,
                     name = doc.getString("name") ?: "Unknown",
                     email = doc.getString("email") ?: "No email",
-
+                    role = doc.getString("role") ?: "client"
                 )
                 onResult(user)
             }

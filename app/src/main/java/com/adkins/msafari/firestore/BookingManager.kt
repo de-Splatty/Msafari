@@ -28,9 +28,13 @@ object BookingManager {
         travelers: List<Traveler>
     ) {
         val bookingId = db.collection("bookings").document().id
+
+        // ✅ Fix: Assign first selected driver's ID to booking.driverId
+        val primaryDriverId = selectedDrivers.firstOrNull()?.id.orEmpty()
+
         val booking = Booking(
             clientId = clientId,
-            driverId = "",
+            driverId = primaryDriverId,
             vehicleType = bookingData.vehicleType,
             travelDate = bookingData.travelDate,
             returnDate = bookingData.returnDate,

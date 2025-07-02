@@ -6,6 +6,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 
 data class Driver(
     val id: String = "",
+    val uid: String = "",
     val name: String = "",
     val plateNumber: String = "",
     val vehicleType: String = "",

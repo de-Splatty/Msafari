@@ -2,13 +2,10 @@ package com.adkins.msafari.navigation
 
 import android.os.Build
 import androidx.annotation.RequiresApi
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavHostController
-import androidx.navigation.NavType
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.navArgument
+import androidx.navigation.*
+import androidx.navigation.compose.*
 import com.adkins.msafari.ui.theme.client_screens.*
 import com.adkins.msafari.ui.theme.driver_screens.*
 import com.adkins.msafari.viewmodels.BookingViewModel
@@ -19,13 +16,12 @@ fun MsafariNavGraph(
     navController: NavHostController,
     bookingViewModel: BookingViewModel = viewModel()
 ) {
-    val currentRoute = navController.currentBackStackEntry?.destination?.route ?: Screen.Login.route
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route ?: Screen.Login.route
 
     val onNavigate: (String) -> Unit = { route ->
         if (route != currentRoute) {
-            navController.navigate(route) {
-                popUpTo(Screen.ClientHome.route)
-            }
+            navController.navigate(route)
         }
     }
 
@@ -34,27 +30,26 @@ fun MsafariNavGraph(
         startDestination = Screen.SplashScreen.route
     ) {
         composable(Screen.SplashScreen.route) {
-            SplashScreen(navController = navController)
+            SplashScreen(navController)
         }
 
         composable(Screen.Login.route) {
             LoginScreen(
-                onLoginSuccess = { role ->
-                    when (role.lowercase()) {
-                        "client" -> navController.navigate(Screen.ClientHome.route) {
+                onLoginSuccess = { route ->
+                    when (route.lowercase()) {
+                        "client_home" -> navController.navigate(Screen.ClientHome.route) {
                             popUpTo(Screen.Login.route) { inclusive = true }
                         }
-                        "driver" -> navController.navigate(Screen.DriverDashboard.route) {
+                        "driver_dashboard" -> navController.navigate(Screen.DriverDashboard.route) {
                             popUpTo(Screen.Login.route) { inclusive = true }
                         }
-                        else -> navController.navigate(Screen.Login.route) {
+                        "driver_info" -> navController.navigate(Screen.DriverInfo.route) {
                             popUpTo(Screen.Login.route) { inclusive = true }
                         }
+                        else -> navController.navigate(Screen.Login.route)
                     }
                 },
-                onSwitchToSignup = {
-                    navController.navigate(Screen.Signup.route)
-                }
+                onSwitchToSignup = { navController.navigate(Screen.Signup.route) }
             )
         }
 
@@ -65,14 +60,11 @@ fun MsafariNavGraph(
                         popUpTo(Screen.Signup.route) { inclusive = true }
                     }
                 },
-                onSwitchToLogin = {
-                    navController.navigate(Screen.Login.route) {
-                        popUpTo(Screen.Signup.route) { inclusive = true }
-                    }
-                }
+                onSwitchToLogin = { navController.navigate(Screen.Login.route) }
             )
         }
 
+        // Client Screens
         composable(Screen.ClientHome.route) {
             ClientHomeScreen(
                 onStartBooking = { navController.navigate(Screen.Booking.route) },
@@ -170,23 +162,17 @@ fun MsafariNavGraph(
         }
 
         composable(Screen.ClientTripStatus.route) {
-            ClientTripStatusScreen(
-                currentRoute = currentRoute,
-                onNavigate = onNavigate
-            )
+            ClientTripStatusScreen(currentRoute, onNavigate)
         }
 
         composable(Screen.BookingHistory.route) {
-            BookingHistoryScreen(
-                currentRoute = currentRoute,
-                onNavigate = onNavigate
-            )
+            BookingHistoryScreen(currentRoute, onNavigate)
         }
 
         composable(Screen.Settings.route) {
             ClientSettingsScreen(
-                currentRoute = currentRoute,
-                onNavigate = onNavigate,
+                currentRoute,
+                onNavigate,
                 onLogoutSuccess = {
                     navController.navigate(Screen.Login.route) {
                         popUpTo(Screen.ClientHome.route) { inclusive = true }
@@ -197,8 +183,8 @@ fun MsafariNavGraph(
 
         composable(Screen.Profile.route) {
             ProfileScreen(
-                currentRoute = currentRoute,
-                onNavigate = onNavigate,
+                currentRoute,
+                onNavigate,
                 onLogout = {
                     navController.navigate(Screen.Login.route) {
                         popUpTo(Screen.Profile.route) { inclusive = true }
@@ -213,37 +199,30 @@ fun MsafariNavGraph(
         }
 
         composable(Screen.PendingSafaris.route) {
-            PendingSafarisScreen(
-                currentRoute = currentRoute,
-                onNavigate = onNavigate
-            )
+            PendingSafarisScreen(currentRoute, onNavigate)
         }
 
+        // Driver Screens
         composable(Screen.DriverDashboard.route) {
             DriverDashboardScreen(
+                currentRoute,
+                onNavigate,
                 onLogout = {
                     navController.navigate(Screen.Login.route) {
                         popUpTo(Screen.DriverDashboard.route) { inclusive = true }
                     }
-                },
-                onNavigateToSettings = {
-                    navController.navigate(Screen.DriverSettings.route)
-                },
-                onNavigateToProfile = {
-                    navController.navigate(Screen.DriverProfile.route)
-                },
-                onNavigateToPayments = {
-                    navController.navigate(Screen.DriverPayments.route)
-                },
-                onNavigateToPastDrives = {
-                    navController.navigate(Screen.PastDrives.route)
-                },
-                onNavigateToAlerts = TODO()
+                }
             )
+        }
+
+        composable(Screen.DriverInfo.route) {
+            DriverInfoScreen(currentRoute, onNavigate)
         }
 
         composable(Screen.DriverProfile.route) {
             DriverProfileScreen(
+                currentRoute,
+                onNavigate,
                 onLogout = {
                     navController.navigate(Screen.Login.route) {
                         popUpTo(Screen.DriverProfile.route) { inclusive = true }
@@ -253,24 +232,16 @@ fun MsafariNavGraph(
                     navController.navigate(Screen.Login.route) {
                         popUpTo(Screen.DriverProfile.route) { inclusive = true }
                     }
-                },
-                onNavigateToDashboard = {
-                    navController.navigate(Screen.DriverDashboard.route) {
-                        popUpTo(Screen.DriverProfile.route) { inclusive = true }
-                    }
                 }
             )
         }
 
         composable(Screen.DriverSettings.route) {
             DriverSettingsScreen(
+                currentRoute,
+                onNavigate,
                 onLogout = {
                     navController.navigate(Screen.Login.route) {
-                        popUpTo(Screen.DriverSettings.route) { inclusive = true }
-                    }
-                },
-                onNavigateBack = {
-                    navController.navigate(Screen.DriverDashboard.route) {
                         popUpTo(Screen.DriverSettings.route) { inclusive = true }
                     }
                 }
@@ -278,11 +249,48 @@ fun MsafariNavGraph(
         }
 
         composable(Screen.DriverPayments.route) {
-            DriverPaymentsScreen()
+            DriverPaymentsScreen(currentRoute, onNavigate)
         }
 
         composable(Screen.PastDrives.route) {
-            PastDrivesScreen()
+            PastDrivesScreen(currentRoute, onNavigate)
+        }
+
+        composable(Screen.DriverAlerts.route) {
+            DriverAlertsScreen(currentRoute, onNavigate)
+        }
+
+        composable(Screen.ApproveSafaris.route) {
+            ApprovedSafarisScreen(
+                currentRoute,
+                onNavigate,
+                onNavigateToDetails = { bookingId ->
+                    navController.navigate(Screen.DriverRequestDetails.createRoute(bookingId))
+                }
+            )
+        }
+
+        composable(
+            route = Screen.DriverRequestDetails.route,
+            arguments = listOf(navArgument("bookingId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val bookingId = backStackEntry.arguments?.getString("bookingId") ?: ""
+            DriverRequestDetailsScreen(
+                bookingId = bookingId,
+                currentRoute = currentRoute,
+                onNavigate = onNavigate,
+                onBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(Screen.DriverNewRequests.route) {
+            DriverNewRequestsScreen(
+                currentRoute,
+                onNavigate,
+                onNavigateToDetails = { bookingId ->
+                    navController.navigate(Screen.DriverRequestDetails.createRoute(bookingId))
+                }
+            )
         }
     }
 }

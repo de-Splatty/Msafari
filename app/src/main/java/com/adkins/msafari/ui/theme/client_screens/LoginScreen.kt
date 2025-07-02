@@ -23,16 +23,18 @@ import androidx.compose.ui.unit.sp
 import com.adkins.msafari.R
 import com.adkins.msafari.auth.AccountManager
 import com.adkins.msafari.auth.AuthManager
-import com.adkins.msafari.firestore.DriverManager
+import com.adkins.msafari.firestore.UserManager
 import com.adkins.msafari.models.User
 import com.adkins.msafari.ui.theme.Black
 import com.adkins.msafari.ui.theme.Green
 import com.adkins.msafari.ui.theme.White
 import com.adkins.msafari.utils.ErrorLogger
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 
 @Composable
 fun LoginScreen(
-    onLoginSuccess: (role: String) -> Unit,
+    onLoginSuccess: (route: String) -> Unit,
     onSwitchToSignup: () -> Unit
 ) {
     var email by remember { mutableStateOf("") }
@@ -76,7 +78,7 @@ fun LoginScreen(
             OutlinedTextField(
                 value = email,
                 onValueChange = { email = it },
-                label = { Text("Email", color = White) },
+                label = { Text("Email") },
                 modifier = Modifier.fillMaxWidth(),
                 colors = textFieldColors()
             )
@@ -86,7 +88,7 @@ fun LoginScreen(
             OutlinedTextField(
                 value = password,
                 onValueChange = { password = it },
-                label = { Text("Password", color = White) },
+                label = { Text("Password") },
                 visualTransformation = if (isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                 trailingIcon = {
                     val icon = if (isPasswordVisible) Icons.Filled.VisibilityOff else Icons.Filled.Visibility
@@ -107,10 +109,15 @@ fun LoginScreen(
 
             Button(
                 onClick = {
+                    if (email.isBlank() || password.isBlank()) {
+                        error = "Email and password cannot be empty"
+                        return@Button
+                    }
+
                     AuthManager.signIn(
-                        email,
-                        password,
-                        context,
+                        email = email,
+                        password = password,
+                        context = context,
                         onSuccess = {
                             AuthManager.fetchUserRole(
                                 onRoleFetched = { role ->
@@ -121,9 +128,11 @@ fun LoginScreen(
                                                 val user = User(
                                                     uid = uid,
                                                     name = name,
-                                                    email = email
+                                                    email = email,
+                                                    role = role
                                                 )
                                                 AccountManager.saveAccount(user)
+                                                UserManager.saveUserToFirestore(user)
                                             },
                                             onError = {
                                                 ErrorLogger.logError(
@@ -134,15 +143,40 @@ fun LoginScreen(
                                             }
                                         )
 
-                                        // ✅ Redirect directly to driver dashboard
-                                        if (role.lowercase() == "driver") {
-                                            onLoginSuccess("driver")
-                                        } else {
-                                            onLoginSuccess(role)
+                                        when (role.lowercase()) {
+                                            "client" -> {
+                                                onLoginSuccess("client_home")
+                                            }
+
+                                            "driver" -> {
+                                                val firestore = FirebaseFirestore.getInstance()
+                                                firestore.collection("drivers")
+                                                    .document(uid)
+                                                    .get()
+                                                    .addOnSuccessListener { doc ->
+                                                        if (doc.exists()) {
+                                                            onLoginSuccess("driver_dashboard")
+                                                        } else {
+                                                            onLoginSuccess("driver_info")
+                                                        }
+                                                    }
+                                                    .addOnFailureListener { e ->
+                                                        error = "Login succeeded but failed to fetch driver info."
+                                                        ErrorLogger.logError(
+                                                            "Driver Firestore check failed",
+                                                            e,
+                                                            uid
+                                                        )
+                                                    }
+                                            }
+
+                                            else -> {
+                                                error = "Unknown role: $role"
+                                            }
                                         }
                                     } else {
-                                        error = "Failed to get user ID"
-                                        ErrorLogger.logError("Login succeeded but UID was null", null)
+                                        error = "User ID is null after login"
+                                        ErrorLogger.logError("UID null after login", null)
                                     }
                                 },
                                 onFailure = {

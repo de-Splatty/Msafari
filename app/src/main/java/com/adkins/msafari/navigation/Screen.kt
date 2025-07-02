@@ -35,5 +35,14 @@ sealed class Screen(val route: String) {
     object DriverSettings : Screen("driver_settings")
     object DriverPayments : Screen("driver_payments")
     object PastDrives : Screen("past_drives")
+    object DriverAlerts : Screen("driver_alerts")
+    object ApproveSafaris : Screen("approve_safaris")
+    object DriverNewRequests : Screen("driver_new_requests")
+
+    object DriverRequestDetails : Screen("driver_request_details/{bookingId}") {
+        fun createRoute(bookingId: String) = "driver_request_details/$bookingId"
+    }
+
+    object DriverInfo : Screen("driver_info")
 
 }

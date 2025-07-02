@@ -26,20 +26,33 @@ object AccountManager {
     fun saveAccount(user: User) {
         checkInitialized()
         val currentAccounts = getSavedAccounts().toMutableList()
-        if (currentAccounts.none { it.uid == user.uid }) {
+
+        // Check if account exists and update instead of duplicate
+        val existingIndex = currentAccounts.indexOfFirst { it.uid == user.uid }
+        if (existingIndex >= 0) {
+            currentAccounts[existingIndex] = user
+        } else {
             currentAccounts.add(user)
-            sharedPreferences.edit().putString(ACCOUNTS_KEY, gson.toJson(currentAccounts)).apply()
         }
-        setCurrentAccount(user) // ✅ automatically sets as active
+
+        sharedPreferences.edit().putString(ACCOUNTS_KEY, gson.toJson(currentAccounts)).apply()
+        setCurrentAccount(user)
     }
 
     fun getSavedAccounts(): List<User> {
         checkInitialized()
         val json = sharedPreferences.getString(ACCOUNTS_KEY, null)
-        return if (!json.isNullOrEmpty()) {
-            val type = object : TypeToken<List<User>>() {}.type
-            gson.fromJson(json, type)
-        } else emptyList()
+        return try {
+            if (!json.isNullOrEmpty()) {
+                val type = object : TypeToken<List<User>>() {}.type
+                gson.fromJson(json, type)
+            } else {
+                emptyList()
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            emptyList() // fallback to prevent crash on corrupted JSON
+        }
     }
 
     fun setCurrentAccount(user: User) {
@@ -50,7 +63,12 @@ object AccountManager {
     fun getCurrentAccount(): User? {
         checkInitialized()
         val json = sharedPreferences.getString(ACTIVE_ACCOUNT_KEY, null)
-        return json?.let { gson.fromJson(it, User::class.java) }
+        return try {
+            json?.let { gson.fromJson(it, User::class.java) }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
     }
 
     fun removeAccount(uid: String) {
@@ -58,7 +76,6 @@ object AccountManager {
         val updated = getSavedAccounts().filterNot { it.uid == uid }
         sharedPreferences.edit().putString(ACCOUNTS_KEY, gson.toJson(updated)).apply()
 
-        // remove active account if it was deleted
         val current = getCurrentAccount()
         if (current?.uid == uid) {
             sharedPreferences.edit().remove(ACTIVE_ACCOUNT_KEY).apply()

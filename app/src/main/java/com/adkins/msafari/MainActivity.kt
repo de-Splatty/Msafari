@@ -9,6 +9,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
+import com.adkins.msafari.auth.AccountManager
 import com.adkins.msafari.navigation.MsafariNavGraph
 import com.adkins.msafari.ui.theme.MsafariTheme
 import com.adkins.msafari.utils.NotificationUtils
@@ -19,6 +20,9 @@ class MainActivity : ComponentActivity() {
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // ✅ Initialize AccountManager to prevent crash
+        AccountManager.init(applicationContext)
 
         // 📣 Create notification channel (for geofencing alerts)
         NotificationUtils.createNotificationChannel(applicationContext)

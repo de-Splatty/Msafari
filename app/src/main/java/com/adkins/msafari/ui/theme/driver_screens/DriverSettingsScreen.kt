@@ -12,47 +12,57 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.adkins.msafari.components.DriverScaffoldWrapper
+import com.adkins.msafari.navigation.Screen
 import com.adkins.msafari.ui.theme.Black
 import com.adkins.msafari.ui.theme.Green
 import com.adkins.msafari.ui.theme.White
 
 @Composable
 fun DriverSettingsScreen(
-    onLogout: () -> Unit,
-    onNavigateBack: () -> Unit
+    currentRoute: String,
+    onNavigate: (String) -> Unit,
+    onLogout: () -> Unit
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Black)
-            .padding(16.dp)
-    ) {
-        Text(
-            text = "Settings",
-            color = Green,
-            fontSize = 24.sp,
-            modifier = Modifier.align(Alignment.CenterHorizontally)
-        )
+    DriverScaffoldWrapper(
+        title = "Driver Settings",
+        currentRoute = currentRoute,
+        onNavigate = onNavigate
+    ) { innerPadding: PaddingValues ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Black)
+                .padding(16.dp)
+                .padding(innerPadding)
+        ) {
+            Text(
+                text = "Settings",
+                color = Green,
+                fontSize = 24.sp,
+                modifier = Modifier.align(Alignment.CenterHorizontally)
+            )
 
-        Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
-        SettingItem(label = "Notifications", value = "Enabled")
-        SettingItem(label = "Language", value = "English")
-        SettingItem(label = "Theme", value = "Dark Mode")
+            SettingItem(label = "Notifications", value = "Enabled")
+            SettingItem(label = "Language", value = "English")
+            SettingItem(label = "Theme", value = "Dark Mode")
 
-        Spacer(modifier = Modifier.weight(1f))
+            Spacer(modifier = Modifier.weight(1f))
 
-        DriverActionButton(
-            text = "Back to Dashboard",
-            icon = Icons.Default.ArrowBack,
-            onClick = onNavigateBack
-        )
+            DriverActionButton(
+                text = "Back to Dashboard",
+                icon = Icons.Default.ArrowBack,
+                onClick = { onNavigate(Screen.DriverDashboard.route) }
+            )
 
-        DriverActionButton(
-            text = "Logout",
-            icon = Icons.Default.ExitToApp,
-            onClick = onLogout
-        )
+            DriverActionButton(
+                text = "Logout",
+                icon = Icons.Default.ExitToApp,
+                onClick = onLogout
+            )
+        }
     }
 }
 
