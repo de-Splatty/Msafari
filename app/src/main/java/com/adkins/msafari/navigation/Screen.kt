@@ -45,4 +45,6 @@ sealed class Screen(val route: String) {
 
     object DriverInfo : Screen("driver_info")
 
+    // New screen for setting up daily rate
+    object RateSetup : Screen("rate_setup")
 }

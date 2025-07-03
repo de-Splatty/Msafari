@@ -6,9 +6,12 @@ import androidx.compose.runtime.*
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.*
 import androidx.navigation.compose.*
+import com.adkins.msafari.firestore.DriverManager
 import com.adkins.msafari.ui.theme.client_screens.*
 import com.adkins.msafari.ui.theme.driver_screens.*
 import com.adkins.msafari.viewmodels.BookingViewModel
+import com.adkins.msafari.viewmodels.DriverViewModel
+import com.google.firebase.auth.FirebaseAuth
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
@@ -204,6 +207,22 @@ fun MsafariNavGraph(
 
         // Driver Screens
         composable(Screen.DriverDashboard.route) {
+            val driverViewModel: DriverViewModel = viewModel()
+
+            LaunchedEffect(Unit) {
+                driverViewModel.loadDriverIfExists(
+                    onExists = {
+                        DriverManager.getDriverProfile(FirebaseAuth.getInstance().currentUser?.uid.orEmpty()) { driver ->
+                            if (driver == null || driver.dailyRate <= 0) {
+                                navController.navigate(Screen.RateSetup.route) {
+                                    popUpTo(Screen.DriverDashboard.route) { inclusive = true }
+                                }
+                            }
+                        }
+                    }
+                )
+            }
+
             DriverDashboardScreen(
                 currentRoute,
                 onNavigate,
@@ -290,6 +309,15 @@ fun MsafariNavGraph(
                 onNavigateToDetails = { bookingId ->
                     navController.navigate(Screen.DriverRequestDetails.createRoute(bookingId))
                 }
+            )
+        }
+
+        composable(Screen.RateSetup.route) {
+            RateSetupScreen(
+                currentRoute = currentRoute,
+                onNavigate = onNavigate,
+
+
             )
         }
     }

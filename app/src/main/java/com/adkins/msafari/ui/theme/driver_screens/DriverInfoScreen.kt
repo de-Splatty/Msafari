@@ -111,6 +111,16 @@ fun DriverInfoScreen(
                 singleLine = true
             )
 
+            OutlinedTextField(
+                value = if (state.dailyRate == 0) "" else state.dailyRate.toString(),
+                onValueChange = { value ->
+                    val rate = value.toIntOrNull() ?: 0
+                    viewModel.updateField(dailyRate = rate)
+                },
+                label = { Text("Daily Rate (KES)") },
+                singleLine = true
+            )
+
             state.errorMessage?.let {
                 Text(text = it, color = MaterialTheme.colorScheme.error)
             }
@@ -130,7 +140,7 @@ fun DriverInfoScreen(
         }
     }
 
-    // Navigate automatically if profile is already completed
+    // Auto navigate if already complete
     LaunchedEffect(Unit) {
         viewModel.loadDriverIfExists {
             onNavigate("driver_dashboard")

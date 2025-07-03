@@ -12,11 +12,17 @@ data class Driver(
     val vehicleType: String = "",
     val seater: Int = 0,
     val phoneNumber: String = "",
-    val nationalId: String = ""
+    val nationalId: String = "",
+    val dailyRate: Int = 0,
+    val lastRateUpdate: Long = 0L
 )
 
 object DriverManager {
     private val firestore = FirebaseFirestore.getInstance()
+
+    fun getCurrentDriverId(): String? {
+        return FirebaseAuth.getInstance().currentUser?.uid
+    }
 
     fun fetchAvailableDrivers(
         travelDate: String,
@@ -50,13 +56,15 @@ object DriverManager {
                 val seats = doc.getLong("seater")
                 val phone = doc.getString("phoneNumber")
                 val nationalId = doc.getString("nationalId")
+                val rate = doc.getLong("dailyRate")
 
                 val complete = !name.isNullOrBlank() &&
                         !plate.isNullOrBlank() &&
                         !type.isNullOrBlank() &&
                         seats != null && seats > 0 &&
                         !phone.isNullOrBlank() &&
-                        !nationalId.isNullOrBlank()
+                        !nationalId.isNullOrBlank() &&
+                        rate != null && rate > 0
 
                 onResult(complete)
             }
@@ -73,6 +81,7 @@ object DriverManager {
         seater: Int?,
         phoneNumber: String,
         nationalId: String,
+        dailyRate: Int?,
         onSuccess: () -> Unit,
         onFailure: (String) -> Unit
     ) {
@@ -84,6 +93,8 @@ object DriverManager {
             return
         }
 
+        val now = System.currentTimeMillis()
+
         val data = mapOf(
             "uid" to uid,
             "name" to name,
@@ -92,6 +103,8 @@ object DriverManager {
             "seater" to seater,
             "phoneNumber" to phoneNumber,
             "nationalId" to nationalId,
+            "dailyRate" to (dailyRate ?: 0),
+            "lastRateUpdate" to now,
             "isProfileComplete" to true
         )
 
@@ -118,6 +131,43 @@ object DriverManager {
             .addOnFailureListener { e ->
                 ErrorLogger.logError("Failed to fetch driver profile", e, driverId)
                 onResult(null)
+            }
+    }
+
+    fun updateDailyRate(
+        driverId: String,
+        newRate: Int,
+        onSuccess: () -> Unit,
+        onFailure: (String) -> Unit
+    ) {
+        val currentTime = System.currentTimeMillis()
+
+        firestore.collection("drivers").document(driverId)
+            .get()
+            .addOnSuccessListener { doc ->
+                val lastUpdate = doc.getLong("lastRateUpdate") ?: 0L
+                val canEdit = currentTime - lastUpdate >= 14L * 24 * 60 * 60 * 1000 // 14 days
+
+                if (canEdit) {
+                    val data = mapOf(
+                        "dailyRate" to newRate,
+                        "lastRateUpdate" to currentTime
+                    )
+
+                    firestore.collection("drivers").document(driverId)
+                        .update(data)
+                        .addOnSuccessListener { onSuccess() }
+                        .addOnFailureListener { e ->
+                            ErrorLogger.logError("Failed to update daily rate", e, driverId)
+                            onFailure(e.message ?: "Failed to update daily rate.")
+                        }
+                } else {
+                    onFailure("Rate can only be updated once every 14 days.")
+                }
+            }
+            .addOnFailureListener { e ->
+                ErrorLogger.logError("Failed to fetch rate info before update", e, driverId)
+                onFailure(e.message ?: "Failed to update rate.")
             }
     }
 }

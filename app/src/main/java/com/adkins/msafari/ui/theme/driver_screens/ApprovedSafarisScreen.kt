@@ -1,7 +1,6 @@
 package com.adkins.msafari.ui.theme.driver_screens
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -20,10 +19,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.adkins.msafari.components.DriverScaffoldWrapper
+import com.adkins.msafari.firestore.DriverManager
 import com.adkins.msafari.ui.theme.Black
 import com.adkins.msafari.ui.theme.Green
 import com.adkins.msafari.ui.theme.White
-import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
@@ -44,7 +43,7 @@ fun ApprovedSafarisScreen(
     onNavigateToDetails: (String) -> Unit
 ) {
     val db = FirebaseFirestore.getInstance()
-    val auth = FirebaseAuth.getInstance()
+    val driverId = DriverManager.getCurrentDriverId()
     var safaris by remember { mutableStateOf<List<Safari>>(emptyList()) }
     var loading by remember { mutableStateOf(false) }
 
@@ -52,24 +51,34 @@ fun ApprovedSafarisScreen(
     val pullRefreshState = rememberPullRefreshState(
         refreshing = loading,
         onRefresh = {
-            scope.launch {
-                loading = true
-                loadApprovedSafaris(
-                    db = db,
-                    driverId = auth.currentUser?.uid ?: "",
-                    onLoaded = { safaris = it; loading = false }
-                )
+            if (driverId != null) {
+                scope.launch {
+                    loading = true
+                    loadApprovedSafaris(
+                        db = db,
+                        driverId = driverId,
+                        onLoaded = {
+                            safaris = it
+                            loading = false
+                        }
+                    )
+                }
             }
         }
     )
 
-    LaunchedEffect(Unit) {
-        loading = true
-        loadApprovedSafaris(
-            db = db,
-            driverId = auth.currentUser?.uid ?: "",
-            onLoaded = { safaris = it; loading = false }
-        )
+    LaunchedEffect(driverId) {
+        if (driverId != null) {
+            loading = true
+            loadApprovedSafaris(
+                db = db,
+                driverId = driverId,
+                onLoaded = {
+                    safaris = it
+                    loading = false
+                }
+            )
+        }
     }
 
     DriverScaffoldWrapper(
@@ -77,7 +86,6 @@ fun ApprovedSafarisScreen(
         currentRoute = currentRoute,
         onNavigate = onNavigate
     ) { innerPadding ->
-
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -126,7 +134,7 @@ suspend fun loadApprovedSafaris(
     onLoaded: (List<Safari>) -> Unit
 ) {
     val result = db.collection("bookings")
-        .whereEqualTo("approvedBy", driverId) // ✅ CORRECTED field
+        .whereEqualTo("approvedBy", driverId)
         .whereEqualTo("status", "approved")
         .get()
         .await()
@@ -145,7 +153,10 @@ suspend fun loadApprovedSafaris(
 }
 
 @Composable
-fun ApprovedSafariCard(safari: Safari, onClick: () -> Unit) {
+fun ApprovedSafariCard(
+    safari: Safari,
+    onClick: () -> Unit
+) {
     Card(
         onClick = onClick,
         colors = CardDefaults.cardColors(containerColor = Color.DarkGray),

@@ -15,7 +15,7 @@ import com.adkins.msafari.firestore.BookingManager
 import com.adkins.msafari.firestore.Driver
 import com.adkins.msafari.models.BookingData
 import com.adkins.msafari.models.Traveler
-import com.adkins.msafari.utils.ErrorLogger // ✅ Import ErrorLogger
+import com.adkins.msafari.utils.ErrorLogger
 import com.adkins.msafari.viewmodels.BookingViewModel
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
@@ -67,6 +67,7 @@ fun BookingConfirmationScreen(
                         Text("Name: ${driver.name}", color = colorScheme.onSurface)
                         Text("Vehicle: ${driver.vehicleType}", color = colorScheme.onSurface)
                         Text("Seats: ${driver.seater}", color = colorScheme.onSurface)
+                        Text("Rate: ${driver.dailyRate} KES/day", color = colorScheme.onSurface)
                     }
                 }
             }
@@ -107,8 +108,7 @@ fun BookingConfirmationScreen(
                                         LocalDate.parse(bookingData.returnDate)
                                     ).toInt().coerceAtLeast(1)
 
-                                    val dailyRate = 18000
-                                    val totalCost = days * dailyRate
+                                    val totalCost = selectedDrivers.sumOf { it.dailyRate * days }
                                     val commission = (totalCost * 0.20).toInt()
 
                                     BookingManager.saveBookingToSelectedDrivers(

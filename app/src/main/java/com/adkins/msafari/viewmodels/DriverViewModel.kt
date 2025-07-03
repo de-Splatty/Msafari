@@ -3,30 +3,19 @@ package com.adkins.msafari.viewmodels
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.adkins.msafari.firestore.DriverManager
+import com.adkins.msafari.state.DriverState
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-
-data class DriverInfoState(
-    val fullName: String = "",
-    val phoneNumber: String = "",
-    val idNumber: String = "",
-    val plateNumber: String = "",
-    val vehicleType: String = "",
-    val seater: Int = 0,
-    val isLoading: Boolean = false,
-    val errorMessage: String? = null,
-    val isCompleted: Boolean = false
-)
 
 class DriverViewModel : ViewModel() {
 
     private val auth = FirebaseAuth.getInstance()
     private val driverId = auth.currentUser?.uid.orEmpty()
 
-    private val _state = MutableStateFlow(DriverInfoState())
-    val state: StateFlow<DriverInfoState> = _state
+    private val _state = MutableStateFlow(DriverState())
+    val state: StateFlow<DriverState> = _state
 
     fun updateField(
         fullName: String? = null,
@@ -34,7 +23,8 @@ class DriverViewModel : ViewModel() {
         idNumber: String? = null,
         plateNumber: String? = null,
         vehicleType: String? = null,
-        seater: Int? = null
+        seater: Int? = null,
+        dailyRate: Int? = null
     ) {
         _state.value = _state.value.copy(
             fullName = fullName ?: _state.value.fullName,
@@ -42,8 +32,13 @@ class DriverViewModel : ViewModel() {
             idNumber = idNumber ?: _state.value.idNumber,
             plateNumber = plateNumber ?: _state.value.plateNumber,
             vehicleType = vehicleType ?: _state.value.vehicleType,
-            seater = seater ?: _state.value.seater
+            seater = seater ?: _state.value.seater,
+            dailyRate = dailyRate ?: _state.value.dailyRate
         )
+    }
+
+    fun setDailyRate(rate: Int) {
+        _state.value = _state.value.copy(dailyRate = rate)
     }
 
     fun submitDriverInfo(onSuccess: () -> Unit) {
@@ -52,7 +47,8 @@ class DriverViewModel : ViewModel() {
         if (
             state.fullName.isBlank() || state.phoneNumber.isBlank() ||
             state.idNumber.isBlank() || state.plateNumber.isBlank() ||
-            state.vehicleType.isBlank() || state.seater <= 0
+            state.vehicleType.isBlank() || state.seater <= 0 ||
+            state.dailyRate == null || state.dailyRate <= 0
         ) {
             _state.value = state.copy(errorMessage = "Please fill all fields correctly.")
             return
@@ -67,8 +63,9 @@ class DriverViewModel : ViewModel() {
             seater = state.seater,
             phoneNumber = state.phoneNumber.trim(),
             nationalId = state.idNumber.trim(),
+            dailyRate = state.dailyRate,
             onSuccess = {
-                _state.value = _state.value.copy(isLoading = false, isCompleted = true)
+                _state.value = _state.value.copy(isLoading = false)
                 onSuccess()
             },
             onFailure = { error ->
@@ -84,13 +81,16 @@ class DriverViewModel : ViewModel() {
     fun loadDriverIfExists(onExists: () -> Unit) {
         viewModelScope.launch {
             DriverManager.getDriverProfile(driverId) { driver ->
-                if (driver != null &&
+                if (
+                    driver != null &&
                     driver.name.isNotBlank() &&
                     driver.vehicleType.isNotBlank() &&
                     driver.seater > 0 &&
                     driver.plateNumber.isNotBlank() &&
-                    driver.nationalId.isNotBlank()
+                    driver.nationalId.isNotBlank() &&
+                    driver.dailyRate != null && driver.dailyRate > 0
                 ) {
+                    _state.value = _state.value.copy(dailyRate = driver.dailyRate)
                     onExists()
                 }
             }
