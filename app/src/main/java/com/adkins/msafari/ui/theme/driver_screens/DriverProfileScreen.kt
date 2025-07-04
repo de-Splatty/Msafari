@@ -172,12 +172,15 @@ fun DriverProfileScreen(
                                     )
                                 } else {
                                     savedAccounts.forEach { account ->
+                                        val displayName = account.name?.takeIf { it.isNotBlank() } ?: "Unnamed"
+                                        val displayRole = account.role?.replaceFirstChar { it.uppercase() } ?: "Unknown Role"
+
                                         DropdownMenuItem(
                                             text = {
                                                 Column {
-                                                    Text(account.name, color = White, fontWeight = FontWeight.SemiBold)
+                                                    Text(displayName, color = White, fontWeight = FontWeight.SemiBold)
                                                     Text(
-                                                        account.role.replaceFirstChar { it.uppercase() },
+                                                        displayRole,
                                                         fontSize = 12.sp,
                                                         color = Color.Gray
                                                     )
@@ -187,7 +190,7 @@ fun DriverProfileScreen(
                                                 dropdownExpanded = false
                                                 AccountManager.setCurrentAccount(account)
                                                 UserManager.saveUserToFirestore(account)
-                                                when (account.role.lowercase()) {
+                                                when (account.role?.lowercase()) {
                                                     "client" -> onNavigate(Screen.ClientHome.route)
                                                     "driver" -> onNavigate(Screen.DriverDashboard.route)
                                                     else -> onNavigate(Screen.Login.route)

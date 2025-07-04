@@ -62,8 +62,8 @@ object AuthManager {
                 if (uid != null) {
                     firestore.collection("users").document(uid).get()
                         .addOnSuccessListener { doc ->
-                            val name = doc.getString("name") ?: email
-                            val role = doc.getString("role") ?: "client"
+                            val name = doc.getString("name")?.takeIf { it.isNotBlank() } ?: email
+                            val role = doc.getString("role")?.takeIf { it.isNotBlank() } ?: "client"
 
                             val user = User(
                                 uid = uid,
@@ -101,14 +101,13 @@ object AuthManager {
 
         firestore.collection("users").document(user.uid).get()
             .addOnSuccessListener { doc ->
-                val role = doc.getString("role") ?: "client"
                 val updatedUser = user.copy(
-                    name = doc.getString("name") ?: user.name,
-                    role = role
+                    name = doc.getString("name")?.takeIf { it.isNotBlank() } ?: user.name,
+                    role = doc.getString("role")?.takeIf { it.isNotBlank() } ?: "client"
                 )
                 AccountManager.init(context)
                 AccountManager.saveAccount(updatedUser)
-                onSuccess(role.lowercase())
+                onSuccess(updatedUser.role.lowercase())
             }
             .addOnFailureListener { e ->
                 ErrorLogger.logError("Failed to loginFromAccount for ${user.uid}", e, user.uid)
@@ -131,7 +130,7 @@ object AuthManager {
 
         firestore.collection("users").document(uid).get()
             .addOnSuccessListener { document ->
-                val role = document.getString("role")
+                val role = document.getString("role")?.takeIf { it.isNotBlank() }
                 if (role != null) {
                     onRoleFetched(role)
                 } else {
@@ -158,7 +157,8 @@ object AuthManager {
 
         firestore.collection("users").document(uid).get()
             .addOnSuccessListener { document ->
-                val name = document.getString("name") ?: document.getString("email") ?: "Client"
+                val name = document.getString("name")?.takeIf { it.isNotBlank() }
+                    ?: document.getString("email") ?: "Client"
                 onResult(name)
             }
             .addOnFailureListener { e ->
@@ -182,9 +182,9 @@ object AuthManager {
             .addOnSuccessListener { doc ->
                 val user = User(
                     uid = uid,
-                    name = doc.getString("name") ?: "Unknown",
-                    email = doc.getString("email") ?: "No email",
-                    role = doc.getString("role") ?: "client"
+                    name = doc.getString("name")?.takeIf { it.isNotBlank() } ?: "Unknown",
+                    email = doc.getString("email")?.takeIf { it.isNotBlank() } ?: "No email",
+                    role = doc.getString("role")?.takeIf { it.isNotBlank() } ?: "client"
                 )
                 onResult(user)
             }

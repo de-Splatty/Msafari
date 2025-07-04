@@ -31,7 +31,7 @@ import com.adkins.msafari.auth.AuthManager
 import com.adkins.msafari.components.ClientScaffoldWrapper
 import com.adkins.msafari.models.User
 import com.adkins.msafari.navigation.Screen
-import com.adkins.msafari.firestore.UserManager // ✅ New import
+import com.adkins.msafari.firestore.UserManager
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -154,12 +154,16 @@ fun ProfileScreen(
                             )
                         } else {
                             savedAccounts.forEach { account ->
+                                val displayName = account.name?.takeIf { it.isNotBlank() } ?: "Unnamed"
+                                val displayRole = account.role?.takeIf { it.isNotBlank() }
+                                    ?.replaceFirstChar { it.uppercase() } ?: "Unknown Role"
+
                                 DropdownMenuItem(
                                     text = {
                                         Column {
-                                            Text(account.name, fontWeight = FontWeight.SemiBold)
+                                            Text(displayName, fontWeight = FontWeight.SemiBold)
                                             Text(
-                                                text = account.role.replaceFirstChar { it.uppercase() },
+                                                text = displayRole,
                                                 fontSize = 12.sp,
                                                 color = Color.Gray
                                             )
@@ -168,11 +172,9 @@ fun ProfileScreen(
                                     onClick = {
                                         dropdownExpanded = false
                                         AccountManager.setCurrentAccount(account)
-
-                                        // ✅ Save to Firestore on switch
                                         UserManager.saveUserToFirestore(account)
 
-                                        when (account.role.lowercase()) {
+                                        when (account.role?.lowercase()) {
                                             "client" -> onNavigate(Screen.ClientHome.route)
                                             "driver" -> onNavigate(Screen.DriverDashboard.route)
                                             else -> onNavigate(Screen.Login.route)
